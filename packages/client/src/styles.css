@@ -294,6 +294,63 @@ button {
 .card-tooltip-name { font-weight: 700; color: var(--accent); }
 .card-tooltip-cost { color: var(--text-dim); }
 .card-tooltip-effect { color: var(--text); }
+.card-tooltip-portal--wide { max-width: 420px; }
+
+.cost-option { display: inline-flex; align-items: center; gap: 3px; }
+.cost-bit { display: inline-flex; align-items: center; gap: 1px; }
+
+/* A card-color category name (e.g. "Science Buildings", "Guilds") highlighted inline
+   wherever an effect description mentions it, tinted to match that color's card. */
+.color-tag {
+  display: inline-block;
+  padding: 0 4px;
+  border-radius: 4px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.color-tag--brown { background: rgba(139, 94, 52, 0.28); color: #d1a877; }
+.color-tag--grey { background: rgba(125, 132, 147, 0.28); color: #c7ccd6; }
+.color-tag--blue { background: rgba(59, 110, 165, 0.28); color: #8fbbe8; }
+.color-tag--yellow { background: rgba(201, 151, 28, 0.28); color: #f0c65c; }
+.color-tag--red { background: rgba(165, 66, 59, 0.28); color: #ec8f88; }
+.color-tag--green { background: rgba(76, 140, 74, 0.28); color: #8fd28c; }
+.color-tag--purple { background: rgba(123, 67, 151, 0.28); color: #cd9ce6; }
+.color-tag--black { background: rgba(74, 74, 82, 0.35); color: #c6c6ce; }
+
+/* ---------- Chain (parent/children) hover preview ---------- */
+.chain-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+.chain-group-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+.chain-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chain-card {
+  min-width: 110px;
+  max-width: 130px;
+  border-radius: 7px;
+  padding: 6px 8px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.chain-card-name { font-weight: 700; font-size: 11px; }
+.chain-card-cost { font-size: 10px; opacity: 0.9; }
+.chain-card-effect { font-size: 10px; opacity: 0.85; line-height: 1.25; }
 
 .main-grid {
   display: grid;
