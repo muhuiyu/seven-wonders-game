@@ -1,0 +1,21 @@
+{
+  "name": "@sw/server",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/server.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@sw/shared": "*",
+    "cors": "^2.8.5",
+    "express": "^4.21.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.9.0",
+    "vitest": "^2.1.5"
+  }
+}

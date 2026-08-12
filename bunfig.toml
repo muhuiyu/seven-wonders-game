@@ -1,0 +1,6 @@
+[install]
+# "clonefile" (the default on APFS) makes installed binaries share the same underlying
+# file as bun's global cache copy. On this machine that causes macOS Gatekeeper to reject
+# execution of native binaries pulled in as dependencies (e.g. esbuild, used by Vite) with
+# "The service was stopped" / EPIPE. Copying instead of cloning avoids the issue.
+backend = "copyfile"

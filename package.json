@@ -1,0 +1,16 @@
+{
+  "name": "seven-wonders",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:server": "bun run --filter @sw/server dev",
+    "dev:client": "bun run --filter @sw/client dev",
+    "test": "bun run --filter @sw/server test",
+    "typecheck": "bun run tsc -b"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

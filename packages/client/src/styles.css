@@ -1,0 +1,518 @@
+:root {
+  color-scheme: light dark;
+  --bg: #14181f;
+  --panel: #1d2330;
+  --panel-alt: #242b3a;
+  --border: #333d52;
+  --text: #e8ecf4;
+  --text-dim: #9aa4bd;
+  --accent: #e0b13b;
+  --accent-dim: #7a6a3a;
+  --danger: #d05a5a;
+  --good: #5ab27a;
+
+  --c-brown: #8b5e34;
+  --c-grey: #7d8493;
+  --c-blue: #3b6ea5;
+  --c-yellow: #c9971c;
+  --c-red: #a5423b;
+  --c-green: #4c8c4a;
+  --c-purple: #7b4397;
+  --c-black: #4a4a52;
+  --c-leader: #8a6d1f;
+
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+/* Minimal sizing for the rich card-art icons (resources/science/shields) used throughout
+   CardEffects.tsx — unstyled elsewhere as of this change, so constrain to a sane inline size. */
+.icon-symbol {
+  width: 16px;
+  height: 16px;
+  vertical-align: -3px;
+  object-fit: contain;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Setup screen ---------- */
+.setup-screen {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.setup-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 560px;
+  width: 100%;
+}
+.setup-card h1 {
+  margin: 0 0 4px;
+  font-size: 28px;
+}
+.setup-card p.sub {
+  color: var(--text-dim);
+  margin: 0 0 24px;
+}
+.field {
+  margin-bottom: 18px;
+}
+.field label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.field input[type="text"] {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--panel-alt);
+  color: var(--text);
+  font-size: 15px;
+}
+.player-count-row {
+  display: flex;
+  gap: 8px;
+}
+.player-count-row button {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--panel-alt);
+  color: var(--text);
+  font-size: 15px;
+}
+.player-count-row button.selected {
+  background: var(--accent);
+  color: #201a08;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+.wonder-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+.wonder-option {
+  border: 1px solid var(--border);
+  background: var(--panel-alt);
+  border-radius: 8px;
+  padding: 10px;
+  text-align: left;
+  color: var(--text);
+}
+.wonder-option.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.wonder-option .name { font-weight: 600; font-size: 13px; }
+.wonder-option .side-toggle { margin-top: 6px; display: flex; gap: 4px; }
+.wonder-option .side-toggle button {
+  flex: 1;
+  font-size: 11px;
+  padding: 3px 0;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+}
+.wonder-option .side-toggle button.selected {
+  background: var(--accent-dim);
+  color: var(--text);
+}
+.start-button {
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  background: var(--accent);
+  color: #201a08;
+  font-size: 16px;
+  font-weight: 700;
+  margin-top: 8px;
+}
+.start-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.expansion-toggle-row {
+  display: flex;
+  gap: 10px;
+}
+.expansion-toggle {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  border: 1px solid var(--border);
+  background: var(--panel-alt);
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+.expansion-toggle.checked {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.expansion-toggle input[type="checkbox"] {
+  margin-top: 2px;
+}
+.expansion-toggle .label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.expansion-toggle .hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+.error-banner {
+  background: rgba(208, 90, 90, 0.15);
+  border: 1px solid var(--danger);
+  color: #ffb3b3;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+/* ---------- Game screen ---------- */
+.game-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 18px 18px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 18px;
+}
+.top-bar .age-round {
+  font-weight: 700;
+  font-size: 15px;
+}
+.top-bar .stats {
+  display: flex;
+  gap: 18px;
+  font-size: 14px;
+  color: var(--text-dim);
+}
+.top-bar .stats b { color: var(--text); }
+.badge {
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.badge-debt { background: rgba(208, 90, 90, 0.18); color: #ffb3b3; }
+.badge-diplomacy { background: rgba(90, 178, 122, 0.18); color: var(--good); }
+
+.opponent-strip {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+}
+.opponent-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  min-width: 190px;
+  flex: 1;
+}
+.opponent-card .name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+.opponent-card .wonder-name { font-size: 11px; color: var(--text-dim); margin-bottom: 6px; }
+.opponent-card .row { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+.opponent-card .colors { display: flex; gap: 4px; margin-top: 6px; }
+.color-pip { width: 16px; height: 16px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #fff; font-weight: 700; }
+
+/* ---------- Card hover tooltip ----------
+   Rendered in a document.body portal (see HoverTooltip.tsx) rather than positioned
+   absolutely within its trigger, so it isn't clipped by scrollable ancestors like
+   .opponent-strip / .hand-strip (overflow-x: auto also clips the y-axis per the CSS spec). */
+.hover-tooltip-trigger {
+  display: inline-flex;
+}
+.card-tooltip-portal {
+  position: fixed;
+  width: max-content;
+  max-width: 220px;
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  pointer-events: none;
+  z-index: 1000;
+}
+.card-tooltip-name { font-weight: 700; color: var(--accent); }
+.card-tooltip-cost { color: var(--text-dim); }
+.card-tooltip-effect { color: var(--text); }
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+@media (max-width: 900px) {
+  .main-grid { grid-template-columns: 1fr; }
+}
+
+.self-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.wonder-panel {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  background: var(--panel-alt);
+}
+.wonder-panel .title { font-weight: 700; margin-bottom: 8px; }
+.wonder-stages { display: flex; gap: 6px; flex-wrap: wrap; }
+.wonder-stage-chip {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 11px;
+  color: var(--text-dim);
+  min-width: 90px;
+}
+.wonder-stage-chip.built {
+  border-color: var(--good);
+  color: var(--text);
+  background: rgba(90, 178, 122, 0.12);
+}
+
+.built-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.built-card-chip {
+  border-radius: 6px;
+  padding: 5px 9px;
+  font-size: 12px;
+  color: #fff;
+  font-weight: 600;
+}
+
+.recruited-leaders { display: flex; flex-wrap: wrap; gap: 6px; }
+.leader-chip {
+  border-radius: 6px;
+  padding: 5px 9px;
+  font-size: 12px;
+  color: #fff;
+  font-weight: 600;
+  background: var(--c-leader);
+}
+
+.log-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  overflow-y: auto;
+  max-height: 480px;
+}
+.log-panel h3 { margin: 0 0 10px; font-size: 13px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+.log-entry { font-size: 13px; padding: 5px 0; border-bottom: 1px solid var(--border); color: var(--text-dim); }
+.log-entry b { color: var(--text); font-weight: 500; }
+
+.hand-section {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+}
+.hand-section h3 { margin: 0 0 10px; font-size: 13px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+.hand-strip {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.card-tile {
+  min-width: 150px;
+  max-width: 150px;
+  border-radius: 10px;
+  padding: 10px;
+  color: #fff;
+  cursor: pointer;
+  border: 2px solid transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: transform 0.1s ease;
+}
+.card-tile:hover { transform: translateY(-3px); }
+.card-tile.selected { border-color: var(--accent); }
+.card-tile.disabled { opacity: 0.45; cursor: not-allowed; }
+.card-tile .card-name { font-weight: 700; font-size: 13px; }
+.card-tile .card-cost { font-size: 12px; opacity: 0.9; }
+.card-tile .card-effect { font-size: 11px; opacity: 0.85; line-height: 1.3; }
+.card-tile .already-built { font-size: 10px; background: rgba(0,0,0,0.35); border-radius: 4px; padding: 2px 5px; align-self: flex-start; }
+
+.action-panel {
+  margin-top: 12px;
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.action-panel .action-btn {
+  padding: 9px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.action-panel .action-btn.primary {
+  background: var(--accent);
+  color: #201a08;
+  border-color: var(--accent);
+}
+.action-panel .action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ---------- Leader draft / recruitment panels ---------- */
+.leader-tile {
+  min-width: 150px;
+  max-width: 150px;
+  border-radius: 10px;
+  padding: 10px;
+  color: #fff;
+  cursor: pointer;
+  border: 2px solid transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--c-leader);
+  transition: transform 0.1s ease;
+}
+.leader-tile:hover { transform: translateY(-3px); }
+.leader-tile.selected { border-color: var(--accent); }
+.leader-tile .leader-name { font-weight: 700; font-size: 13px; }
+.leader-tile .leader-cost { font-size: 12px; opacity: 0.9; }
+.leader-tile .leader-effect { font-size: 11px; opacity: 0.85; line-height: 1.3; }
+
+.leader-recruit-card {
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.leader-recruit-card .leader-recruit-info { flex: 1; min-width: 160px; }
+.leader-recruit-card .leader-recruit-name { font-weight: 700; font-size: 14px; }
+.leader-recruit-card .leader-recruit-effect { font-size: 12px; color: var(--text-dim); }
+
+/* ---------- End game screen ---------- */
+.endgame-screen {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.endgame-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 900px;
+  width: 100%;
+}
+.endgame-card h1 { margin: 0 0 4px; }
+.endgame-card .winner { color: var(--accent); font-size: 18px; margin-bottom: 20px; }
+table.score-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+table.score-table th, table.score-table td {
+  padding: 8px 10px;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+}
+table.score-table th:first-child, table.score-table td:first-child {
+  text-align: left;
+}
+table.score-table tr.winner-row td { color: var(--accent); font-weight: 700; }
+table.score-table th { color: var(--text-dim); font-weight: 600; }
+
+.age-banner {
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 14px;
+}
