@@ -1,21 +1,21 @@
-import type { NeighborSide, PlayerScope, ProductionOption, ResourceType } from "./resources.js";
+import type { NeighborSide, PlayerScope, ProductionOption, ResourceType } from "./resources.js"
 
-export const CARD_COLORS = ["brown", "grey", "blue", "yellow", "red", "green", "purple", "black"] as const;
-export type CardColor = (typeof CARD_COLORS)[number];
+export const CARD_COLORS = ["brown", "grey", "blue", "yellow", "red", "green", "purple", "black"] as const
+export type CardColor = (typeof CARD_COLORS)[number]
 
-export type ExpansionId = "leaders" | "cities";
-export type MilitaryResult = "win" | "lose" | "tie";
+export type ExpansionId = "leaders" | "cities"
+export type MilitaryResult = "win" | "lose" | "tie"
 
-export type ScienceSymbol = "cog" | "compass" | "tablet";
+export type ScienceSymbol = "cog" | "compass" | "tablet"
 
 /** A cost is a list of alternative payment options; a card can be paid for by satisfying ANY one option. */
 export interface CostOption {
-  coins?: number;
-  resources?: Partial<Record<ResourceType, number>>;
+  coins?: number
+  resources?: Partial<Record<ResourceType, number>>
 }
-export type Cost = CostOption[];
+export type Cost = CostOption[]
 
-export const FREE_COST: Cost = [{}];
+export const FREE_COST: Cost = [{}]
 
 export type CardEffect =
   | { kind: "resource"; production: ProductionOption }
@@ -61,16 +61,16 @@ export type CardEffect =
   | { kind: "vpPerCoinsHeld"; coinsPerVp: number } // extra VP per `coinsPerVp` coins held at game end (stacks with treasury scoring)
   | { kind: "vpPerRecruitedLeader"; scope: PlayerScope; perLeader: number }
   | { kind: "vpPerScienceSet"; perSet: number } // Aristotle: extra VP per complete science-symbol set, on top of the base 7/set
-  | { kind: "copyNeighborLeader" }; // Courtesan's Guild: on build, gain the effects of one recruited leader in a neighboring city
+  | { kind: "copyNeighborLeader" } // Courtesan's Guild: on build, gain the effects of one recruited leader in a neighboring city
 
 export interface Card {
-  id: string;
-  name: string;
-  age: 1 | 2 | 3;
-  color: CardColor;
-  cost: Cost;
-  chainFrom?: string[];
-  chainUnlocks?: string[];
-  effects: CardEffect[];
-  requiresExpansion?: ExpansionId;
+  id: string
+  name: string
+  age: 1 | 2 | 3
+  color: CardColor
+  cost: Cost
+  chainFrom?: string[]
+  chainUnlocks?: string[]
+  effects: CardEffect[]
+  requiresExpansion?: ExpansionId
 }
