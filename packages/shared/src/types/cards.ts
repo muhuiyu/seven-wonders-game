@@ -73,4 +73,6 @@ export interface Card {
   chainUnlocks?: string[]
   effects: CardEffect[]
   requiresExpansion?: ExpansionId
+  /** Filename (e.g. "lumber-yard.png") of this card's artwork inside packages/client/public/cards/. Falls back to a placeholder when absent. */
+  image?: string
 }

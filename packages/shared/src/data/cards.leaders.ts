@@ -13,7 +13,13 @@ export const LEADER_CARDS: LeaderCard[] = [
     coinCost: 3,
     effects: [{ kind: "vpPerMilitaryToken", result: "win", scope: "self", perToken: 1 }],
   },
-  { id: "amytis", name: "Amytis", coinCost: 4, effects: [{ kind: "vpPerWonderStage", scope: "self", perStage: 2 }] },
+  {
+    id: "amytis",
+    name: "Amytis",
+    coinCost: 4,
+    effects: [{ kind: "vpPerWonderStage", scope: "self", perStage: 2 }],
+    image: "amytis.png",
+  },
   {
     id: "archimedes",
     name: "Archimedes",
