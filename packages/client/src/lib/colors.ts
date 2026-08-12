@@ -10,3 +10,15 @@ export const COLOR_VAR: Record<CardColor, string> = {
   purple: "var(--c-purple)",
   black: "var(--c-black)",
 };
+
+/** No unicode circle exists for grey, so 🔘 stands in for it. */
+export const COLOR_EMOJI: Record<CardColor, string> = {
+  brown: "🟤",
+  grey: "🔘",
+  blue: "🔵",
+  yellow: "🟡",
+  red: "🔴",
+  green: "🟢",
+  purple: "🟣",
+  black: "⚫",
+};

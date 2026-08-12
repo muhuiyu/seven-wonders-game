@@ -1,4 +1,5 @@
 import { getCard, getLeaderCard, getWonderSide, type Card, type CardColor, type CardEffect, type Cost, type LeaderCard, type ResourceType, type ScienceSymbol } from "@sw/shared";
+import { COLOR_EMOJI } from "./colors";
 
 export const RESOURCE_ICON: Record<ResourceType, string> = {
   wood: "🪵",
@@ -19,14 +20,14 @@ export const SCIENCE_ICON: Record<ScienceSymbol, string> = {
 /** Matches the official 7 Wonders card-category names (see the wiki's color-group headers),
  *  used both in plain-text descriptions and as the highlighted phrase in the rich renderer. */
 export const COLOR_LABEL: Record<CardColor, string> = {
-  brown: "Raw Material Buildings",
-  grey: "Manufactured Buildings",
-  blue: "Civilian Buildings",
-  yellow: "Commercial Buildings",
-  red: "Military Buildings",
-  green: "Science Buildings",
-  purple: "Guilds",
-  black: "City Buildings",
+  brown: `${COLOR_EMOJI.brown} Raw Material Buildings`,
+  grey: `${COLOR_EMOJI.grey} Manufactured Buildings`,
+  blue: `${COLOR_EMOJI.blue} Civilian Buildings`,
+  yellow: `${COLOR_EMOJI.yellow} Commercial Buildings`,
+  red: `${COLOR_EMOJI.red} Military Buildings`,
+  green: `${COLOR_EMOJI.green} Science Buildings`,
+  purple: `${COLOR_EMOJI.purple} Guilds`,
+  black: `${COLOR_EMOJI.black} City Buildings`,
 };
 
 export function describeCost(cost: Cost): string {
