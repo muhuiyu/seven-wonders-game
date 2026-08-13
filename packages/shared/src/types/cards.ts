@@ -52,6 +52,7 @@ export type CardEffect =
   | { kind: "neighborPurchaseRebate"; amount: number } // refund `amount` coins per distinct neighbor side traded with this turn
   | { kind: "vpPerColorSetBonus"; colors: CardColor[]; perSet: number } // min-count set bonus across `colors` (Justinian/Plato style)
   | { kind: "freeLeaderRecruitment" } // this player's future Leader recruitment costs 0 coins
+  | { kind: "leaderRecruitmentDiscount"; self: number; neighbors: number } // Roma (Night): this player's Leader recruitment costs `self` fewer coins; each neighbor's costs `neighbors` fewer
   | { kind: "coinsOnMilitaryWin"; amount: number } // credited whenever this player gains a new military victory token
   | { kind: "freeBuildForColor"; color: CardColor } // cards of this color can always be built ignoring their resource cost
   | { kind: "recycleDiscardOnRecruit" } // one-time: on recruit, take the best card from the discard pile and build it free

@@ -9,10 +9,10 @@ export const AGE_I_CARDS: Card[] = [
   { id: "stone-pit", name: "Stone Pit", age: 1, color: "brown", cost: FREE_COST, effects: [{ kind: "resource", production: p(["stone"]) }] },
   { id: "clay-pool", name: "Clay Pool", age: 1, color: "brown", cost: FREE_COST, effects: [{ kind: "resource", production: p(["clay"]) }] },
   { id: "ore-vein", name: "Ore Vein", age: 1, color: "brown", cost: FREE_COST, effects: [{ kind: "resource", production: p(["ore"]) }] },
-  { id: "timber-yard", name: "Timber Yard", age: 1, color: "brown", cost: FREE_COST, effects: [{ kind: "resource", production: p(["wood", "stone"]) }] },
-  { id: "clay-pit", name: "Clay Pit", age: 1, color: "brown", cost: FREE_COST, effects: [{ kind: "resource", production: p(["clay", "ore"]) }] },
-  { id: "excavation", name: "Excavation", age: 1, color: "brown", cost: FREE_COST, effects: [{ kind: "resource", production: p(["stone", "clay"]) }] },
-  { id: "forest-cave", name: "Forest Cave", age: 1, color: "brown", cost: FREE_COST, effects: [{ kind: "resource", production: p(["wood", "ore"]) }] },
+  { id: "timber-yard", name: "Timber Yard", age: 1, color: "brown", cost: [{ coins: 1 }], effects: [{ kind: "resource", production: p(["wood", "stone"]) }] },
+  { id: "clay-pit", name: "Clay Pit", age: 1, color: "brown", cost: [{ coins: 1 }], effects: [{ kind: "resource", production: p(["clay", "ore"]) }] },
+  { id: "excavation", name: "Excavation", age: 1, color: "brown", cost: [{ coins: 1 }], effects: [{ kind: "resource", production: p(["stone", "clay"]) }] },
+  { id: "forest-cave", name: "Forest Cave", age: 1, color: "brown", cost: [{ coins: 1 }], effects: [{ kind: "resource", production: p(["wood", "ore"]) }] },
 
   // --- Grey: manufactured goods ---
   { id: "glassworks", name: "Glassworks", age: 1, color: "grey", cost: FREE_COST, effects: [{ kind: "resource", production: p(["glass"]) }] },
@@ -20,16 +20,16 @@ export const AGE_I_CARDS: Card[] = [
   { id: "loom-good", name: "Loom", age: 1, color: "grey", cost: FREE_COST, effects: [{ kind: "resource", production: p(["loom"]) }] },
 
   // --- Blue: civilian ---
-  { id: "pawnshop", name: "Pawnshop", age: 1, color: "blue", cost: FREE_COST, effects: [{ kind: "vp", amount: 3 }] },
+  { id: "well", name: "Well", age: 1, color: "blue", cost: FREE_COST, chainUnlocks: ["statue"], effects: [{ kind: "vp", amount: 3 }] },
   { id: "baths", name: "Baths", age: 1, color: "blue", cost: [{ resources: { stone: 1 } }], chainUnlocks: ["aqueduct"], effects: [{ kind: "vp", amount: 3 }] },
-  { id: "altar", name: "Altar", age: 1, color: "blue", cost: FREE_COST, chainUnlocks: ["temple"], effects: [{ kind: "vp", amount: 2 }] },
-  { id: "theatre", name: "Theatre", age: 1, color: "blue", cost: FREE_COST, chainUnlocks: ["statue"], effects: [{ kind: "vp", amount: 2 }] },
+  { id: "altar", name: "Altar", age: 1, color: "blue", cost: FREE_COST, chainUnlocks: ["pantheon"], effects: [{ kind: "vp", amount: 3 }] },
+  { id: "theatre", name: "Theatre", age: 1, color: "blue", cost: FREE_COST, chainUnlocks: ["gardens"], effects: [{ kind: "vp", amount: 3 }] },
 
   // --- Yellow: commerce ---
   { id: "tavern", name: "Tavern", age: 1, color: "yellow", cost: FREE_COST, effects: [{ kind: "coins", amount: 5 }] },
-  { id: "east-trading-post", name: "East Trading Post", age: 1, color: "yellow", cost: FREE_COST, effects: [{ kind: "tradeDiscount", resources: ["wood", "stone", "ore", "clay"], sides: ["right"], unitCost: 1 }] },
+  { id: "east-trading-post", name: "East Trading Post", age: 1, color: "yellow", cost: FREE_COST, chainUnlocks: ["forum"], effects: [{ kind: "tradeDiscount", resources: ["wood", "stone", "ore", "clay"], sides: ["right"], unitCost: 1 }] },
   { id: "west-trading-post", name: "West Trading Post", age: 1, color: "yellow", cost: FREE_COST, effects: [{ kind: "tradeDiscount", resources: ["wood", "stone", "ore", "clay"], sides: ["left"], unitCost: 1 }] },
-  { id: "marketplace", name: "Marketplace", age: 1, color: "yellow", cost: FREE_COST, effects: [{ kind: "tradeDiscount", resources: ["glass", "loom", "papyrus"], sides: ["left", "right"], unitCost: 1 }] },
+  { id: "marketplace", name: "Marketplace", age: 1, color: "yellow", cost: FREE_COST, chainUnlocks: ["caravansery"], effects: [{ kind: "tradeDiscount", resources: ["glass", "loom", "papyrus"], sides: ["left", "right"], unitCost: 1 }] },
 
   // --- Red: military ---
   { id: "stockade", name: "Stockade", age: 1, color: "red", cost: [{ resources: { wood: 1 } }], effects: [{ kind: "shields", count: 1 }] },
@@ -38,6 +38,6 @@ export const AGE_I_CARDS: Card[] = [
 
   // --- Green: science ---
   { id: "apothecary", name: "Apothecary", age: 1, color: "green", cost: [{ resources: { loom: 1 } }], chainUnlocks: ["stables", "dispensary"], effects: [{ kind: "science", symbol: "compass" }] },
-  { id: "workshop", name: "Workshop", age: 1, color: "green", cost: [{ resources: { glass: 1 } }], chainUnlocks: ["laboratory"], effects: [{ kind: "science", symbol: "cog" }] },
+  { id: "workshop", name: "Workshop", age: 1, color: "green", cost: [{ resources: { glass: 1 } }], chainUnlocks: ["laboratory", "archery-range"], effects: [{ kind: "science", symbol: "cog" }] },
   { id: "scriptorium", name: "Scriptorium", age: 1, color: "green", cost: [{ resources: { papyrus: 1 } }], chainUnlocks: ["courthouse", "library"], effects: [{ kind: "science", symbol: "tablet" }] },
 ];

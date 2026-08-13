@@ -1,6 +1,6 @@
 import { getLeaderCard, getWonderSide, type GameState, type GameStateView, type HandCardView, type LeaderHandCardView } from "@sw/shared";
 import { canBuildCard, canBuildWonderStage, getAffordability, getEffectiveCost } from "./actionResolution.js";
-import { getLeaderEffectSources } from "./effectSources.js";
+import { getLeaderRecruitCost } from "./leaders.js";
 
 export function buildView(state: GameState, viewerId: string): GameStateView {
   const you = state.players[viewerId]!;
@@ -18,10 +18,9 @@ export function buildView(state: GameState, viewerId: string): GameStateView {
     };
   });
 
-  const freeRecruitment = getLeaderEffectSources(you).some((e) => e.kind === "freeLeaderRecruitment");
   const leaderHandView: LeaderHandCardView[] = you.leaderHand.map((cardId) => {
     const leader = getLeaderCard(cardId);
-    const cost = freeRecruitment ? 0 : leader.coinCost;
+    const cost = getLeaderRecruitCost(state, viewerId, leader.coinCost);
     const nextStageCost = getEffectiveWonderStageCost(state, viewerId);
     return {
       cardId,

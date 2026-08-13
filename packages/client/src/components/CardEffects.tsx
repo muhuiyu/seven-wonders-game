@@ -207,6 +207,12 @@ export function EffectView({ effect }: { effect: CardEffect }) {
       );
     case "freeLeaderRecruitment":
       return <>Future Leader recruitment costs 0 🪙</>;
+    case "leaderRecruitmentDiscount":
+      return (
+        <>
+          Leader recruitment costs {effect.self} 🪙 less (neighbors: {effect.neighbors} 🪙 less)
+        </>
+      );
     case "coinsOnMilitaryWin":
       return <>+{effect.amount} 🪙 whenever you win a military conflict</>;
     case "freeBuildForColor":

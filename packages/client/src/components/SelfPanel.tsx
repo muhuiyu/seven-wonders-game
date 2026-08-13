@@ -1,8 +1,8 @@
 import type { GameStateView } from "@sw/shared";
 import { COLOR_VAR } from "../lib/colors";
-import { CardTooltip } from "./CardTooltip";
+import { LeaderTooltip } from "./LeaderTooltip";
 import { CardEffectsView, CostView } from "./CardEffects";
-import { cardById, describeLeader, leaderById, wonderSideOf } from "../lib/format";
+import { cardById, leaderById, wonderSideOf, RESOURCE_ICON } from "../lib/format";
 
 interface Props {
   you: GameStateView["you"];
@@ -17,6 +17,16 @@ export function SelfPanel({ you }: Props) {
         <div className="title">
           {wonderSide.wonderName} ({you.wonderSide})
         </div>
+        {wonderSide.startingResource && (
+          <div className="wonder-starting-bonus">
+            Starting resource: {RESOURCE_ICON[wonderSide.startingResource]}
+          </div>
+        )}
+        {wonderSide.startingEffects && wonderSide.startingEffects.length > 0 && (
+          <div className="wonder-starting-bonus">
+            Starting bonus: <CardEffectsView card={{ effects: wonderSide.startingEffects }} />
+          </div>
+        )}
         <div className="wonder-stages">
           {wonderSide.stages.map((stage, i) => (
             <div key={i} className={`wonder-stage-chip${i < you.wonderStagesBuilt ? " built" : ""}`}>
@@ -39,11 +49,17 @@ export function SelfPanel({ you }: Props) {
           {you.builtCardIds.map((id, i) => {
             const card = cardById(id);
             return (
-              <CardTooltip key={id + i} card={card}>
-                <span className="built-card-chip" style={{ background: COLOR_VAR[card.color] }}>
-                  {card.name}
-                </span>
-              </CardTooltip>
+              <div key={id + i} className="built-card" style={{ background: COLOR_VAR[card.color] }}>
+                <div className="card-name">{card.name}</div>
+                <div className="card-cost">
+                  <CostView cost={card.cost} />
+                </div>
+                {card.effects.length > 0 && (
+                  <div className="card-effect">
+                    <CardEffectsView card={card} />
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
@@ -58,9 +74,9 @@ export function SelfPanel({ you }: Props) {
             {you.recruitedLeaderIds.map((id, i) => {
               const leader = leaderById(id);
               return (
-                <span key={id + i} className="leader-chip" title={describeLeader(leader)}>
-                  {leader.name}
-                </span>
+                <LeaderTooltip key={id + i} leader={leader}>
+                  <span className="leader-chip">{leader.name}</span>
+                </LeaderTooltip>
               );
             })}
           </div>

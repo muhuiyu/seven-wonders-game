@@ -20,6 +20,9 @@ export function getProductionSlots(player: PlayerState): ProductionSlot[] {
   }
 
   const wonderSide = getWonderSide(player.wonderId, player.wonderSide);
+  if (wonderSide.startingResource) {
+    slots.push({ id: "wonder:starting", domain: [wonderSide.startingResource], qty: 1 });
+  }
   for (let i = 0; i < player.wonderStagesBuilt; i++) {
     const stage = wonderSide.stages[i];
     if (!stage) continue;

@@ -102,20 +102,23 @@ export const WONDER_SIDES: WonderSide[] = [
     { cost: [{ resources: { stone: 3, ore: 3 } }], effects: [{ kind: "vp", amount: 7 }] },
   ]),
 
-  // --- Roma (Leaders expansion) — starting resource: ore. Simplified digital rendition:
-  // side B's physical-game "draw 4 fresh Leaders mid-game / extra discounted recruit"
-  // ability isn't modeled (no in-engine mechanic for post-draft leader redraws); it's
-  // replaced with a straightforward coin/VP stage so the wonder is still a coherent,
-  // playable option distinct from side A's free-recruitment focus. ---
-  { ...side("roma", "Roma", "A", "ore", [
-    { cost: [{ resources: { stone: 2 } }], effects: [{ kind: "vp", amount: 4 }, { kind: "freeLeaderRecruitment" }] },
-    { cost: [{ resources: { wood: 3 } }], effects: [{ kind: "vp", amount: 6 }] },
-  ]), requiresExpansion: "leaders" },
-  { ...side("roma", "Roma", "B", "ore", [
-    { cost: [{ resources: { clay: 2 } }], effects: [{ kind: "coins", amount: 5 }] },
-    { cost: [{ resources: { stone: 2, ore: 1 } }], effects: [{ kind: "vp", amount: 3 }, { kind: "freeLeaderRecruitment" }] },
-    { cost: [{ resources: { wood: 2, clay: 2 } }], effects: [{ kind: "vp", amount: 3 }] },
-  ]), requiresExpansion: "leaders" },
+  // --- Roma (Leaders expansion) — no starting resource. Its bonus is instead a Leader
+  // recruitment discount active from the start of the game (not gated behind building a
+  // stage): Day side recruits Leaders for free, Night side gets a partial discount that
+  // also extends 1 coin to each neighbor. Stage costs/VP below match the wonder board.
+  // The physical game's Night-side "draw 4 fresh Leaders mid-game" (stage 1) and "recruit
+  // an extra Leader" (stages 2-3) effects aren't modeled — there's no in-engine mechanic
+  // for post-draft leader-pool draws or a second recruitment slot — so those stages grant
+  // coins/VP instead, keeping the wonder a coherent, playable option. ---
+  { ...side("roma", "Roma", "A", undefined, [
+    { cost: [{ resources: { wood: 1, ore: 1, clay: 1 } }], effects: [{ kind: "vp", amount: 4 }] },
+    { cost: [{ resources: { stone: 2, clay: 1, loom: 1 } }], effects: [{ kind: "vp", amount: 6 }] },
+  ]), requiresExpansion: "leaders", startingEffects: [{ kind: "freeLeaderRecruitment" }] },
+  { ...side("roma", "Roma", "B", undefined, [
+    { cost: [{ resources: { wood: 1, clay: 1 } }], effects: [{ kind: "coins", amount: 5 }] },
+    { cost: [{ resources: { stone: 1, clay: 1, glass: 1 } }], effects: [{ kind: "vp", amount: 3 }] },
+    { cost: [{ resources: { stone: 2, papyrus: 1 } }], effects: [{ kind: "vp", amount: 3 }] },
+  ]), requiresExpansion: "leaders", startingEffects: [{ kind: "leaderRecruitmentDiscount", self: 2, neighbors: 1 }] },
 
   // --- Petra (Cities expansion) — starting resource: stone. Stage 2's 7-coin cost is
   // the one number confirmed by research; the other stage resource costs are set in

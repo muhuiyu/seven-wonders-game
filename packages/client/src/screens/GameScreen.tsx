@@ -5,6 +5,9 @@ import { EventLog } from "../components/EventLog";
 import { Hand } from "../components/Hand";
 import { LeaderDraftPanel } from "../components/LeaderDraftPanel";
 import { LeaderRecruitPanel } from "../components/LeaderRecruitPanel";
+import { HoverTooltip } from "../components/HoverTooltip";
+import { CardEffectsView } from "../components/CardEffects";
+import { leaderById } from "../lib/format";
 
 interface Props {
   state: GameStateView;
@@ -34,6 +37,25 @@ export function GameScreen({ state, onSubmit, submitting, error, banner }: Props
           </span>
           {state.you.diplomacyTokens > 0 && <span className="badge badge-diplomacy">🕊️ Diplomacy x{state.you.diplomacyTokens}</span>}
           {state.you.debtVp < 0 && <span className="badge badge-debt">Debt {state.you.debtVp} VP</span>}
+          {state.expansions.leaders && state.you.leaderHandView.length > 0 && (
+            <HoverTooltip
+              content={state.you.leaderHandView.map((view, i) => {
+                const leader = leaderById(view.cardId);
+                return (
+                  <div key={view.cardId + i} style={{ marginBottom: i < state.you.leaderHandView.length - 1 ? 6 : 0 }}>
+                    <div className="card-tooltip-name">{leader.name}</div>
+                    {leader.effects.length > 0 && (
+                      <div className="card-tooltip-effect">
+                        <CardEffectsView card={leader} />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            >
+              <span className="badge badge-leaders-unplayed">🎭 Leaders not played x{state.you.leaderHandView.length}</span>
+            </HoverTooltip>
+          )}
         </div>
       </div>
 

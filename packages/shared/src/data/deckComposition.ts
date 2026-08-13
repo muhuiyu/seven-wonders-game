@@ -17,7 +17,7 @@ export interface ExpansionFlags {
 export const MIN_PLAYERS: Record<string, number> = {
   excavation: 4,
   "forest-cave": 5,
-  pawnshop: 4,
+  well: 4,
   tavern: 4,
   obelisk: 4,
   "siege-workshop": 4,
@@ -37,7 +37,7 @@ const AGE_II_PADDING = [
 const AGE_III_PADDING = [
   "pantheon", "gardens", "town-hall", "palace", "senate", "obelisk",
   "fortifications", "circus", "arsenal", "siege-workshop",
-  "academy", "university", "observatory", "lodge",
+  "academy", "university", "observatory", "lodge", "study",
   "chamber-of-commerce", "arena", "lighthouse", "haven",
 ];
 

@@ -21,6 +21,7 @@ export function getActiveEffectSources(player: PlayerState): CardEffect[] {
   for (const cardId of player.builtCardIds) effects.push(...getCard(cardId).effects);
 
   const wonderSide = getWonderSide(player.wonderId, player.wonderSide);
+  if (wonderSide.startingEffects) effects.push(...wonderSide.startingEffects);
   for (let i = 0; i < player.wonderStagesBuilt; i++) {
     const stage = wonderSide.stages[i];
     if (stage) effects.push(...stage.effects);

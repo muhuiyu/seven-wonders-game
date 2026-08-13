@@ -2,9 +2,27 @@ import { getCard, getLeaderCard, getWonderSide, type GameState, type RoundAction
 import { getAffordability, getEffectiveCost } from "./actionResolution.js";
 import { applyImmediateEffects } from "./effects.js";
 import { payAndCredit } from "./applyAction.js";
-import { getLeaderEffectSources } from "./effectSources.js";
+import { getActiveEffectSources } from "./effectSources.js";
 import { estimatePlayerValue } from "./scoring.js";
 import { getNeighborIds } from "./seating.js";
+
+/** A player's Leader recruitment cost for `baseCost`, after their own and their neighbors' wonder-granted discounts (Roma). */
+export function getLeaderRecruitCost(state: GameState, playerId: string, baseCost: number): number {
+  const activeEffects = getActiveEffectSources(state.players[playerId]!);
+  if (activeEffects.some((e) => e.kind === "freeLeaderRecruitment")) return 0;
+
+  let discount = 0;
+  for (const e of activeEffects) if (e.kind === "leaderRecruitmentDiscount") discount += e.self;
+
+  const { leftId, rightId } = getNeighborIds(state, playerId);
+  for (const neighborId of [leftId, rightId]) {
+    for (const e of getActiveEffectSources(state.players[neighborId]!)) {
+      if (e.kind === "leaderRecruitmentDiscount") discount += e.neighbors;
+    }
+  }
+
+  return Math.max(0, baseCost - discount);
+}
 
 export const LEADER_DRAFT_ROUNDS = 4; // matches the fixed 4-card deal to each player
 
@@ -93,8 +111,7 @@ export function applyLeaderAction(state: GameState, playerId: string, action: Ro
   if (action.type === "recruitLeader") {
     if (!player.leaderHand.includes(action.cardId)) throw new Error(`Leader ${action.cardId} not in hand`);
     const leader = getLeaderCard(action.cardId);
-    const free = getLeaderEffectSources(player).some((e) => e.kind === "freeLeaderRecruitment");
-    const cost = free ? 0 : leader.coinCost;
+    const cost = getLeaderRecruitCost(state, playerId, leader.coinCost);
     if (player.coins < cost) throw new Error(`Cannot afford to recruit ${leader.name}`);
 
     removeFrom(player.leaderHand, action.cardId, "Leader");
