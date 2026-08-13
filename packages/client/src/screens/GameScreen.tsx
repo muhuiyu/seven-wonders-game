@@ -7,7 +7,7 @@ import { LeaderDraftPanel } from "../components/LeaderDraftPanel";
 import { LeaderRecruitPanel } from "../components/LeaderRecruitPanel";
 import { HoverTooltip } from "../components/HoverTooltip";
 import { CardEffectsView } from "../components/CardEffects";
-import { leaderById } from "../lib/format";
+import { leaderById, summarizeMilitaryTokens } from "../lib/format";
 
 interface Props {
   state: GameStateView;
@@ -35,6 +35,14 @@ export function GameScreen({ state, onSubmit, submitting, error, banner }: Props
           <span>
             🏛️ Wonder stage <b>{state.you.wonderStagesBuilt}</b>
           </span>
+          {state.you.militaryTokens.length > 0 && (
+            <span className="badge badge-military">
+              ⚔️{" "}
+              {summarizeMilitaryTokens(state.you.militaryTokens)
+                .map((t) => `${t.value > 0 ? "+" : ""}${t.value}×${t.count}`)
+                .join(" ")}
+            </span>
+          )}
           {state.you.diplomacyTokens > 0 && <span className="badge badge-diplomacy">🕊️ Diplomacy x{state.you.diplomacyTokens}</span>}
           {state.you.debtVp < 0 && <span className="badge badge-debt">Debt {state.you.debtVp} VP</span>}
           {state.expansions.leaders && state.you.leaderHandView.length > 0 && (

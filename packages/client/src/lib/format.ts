@@ -1,4 +1,4 @@
-import { getCard, getLeaderCard, getWonderSide, type Card, type CardColor, type CardEffect, type Cost, type LeaderCard, type ResourceType, type ScienceSymbol } from "@sw/shared";
+import { getCard, getLeaderCard, getWonderSide, type Age, type Card, type CardColor, type CardEffect, type Cost, type LeaderCard, type MilitaryToken, type ResourceType, type ScienceSymbol } from "@sw/shared";
 import { COLOR_EMOJI } from "./colors";
 
 export const RESOURCE_ICON: Record<ResourceType, string> = {
@@ -179,6 +179,19 @@ export function countByColor(builtCardIds: string[]): Partial<Record<CardColor, 
     counts[color] = (counts[color] ?? 0) + 1;
   }
   return counts;
+}
+
+const AGE_TOKEN_VALUE: Record<Age, number> = { 1: 1, 2: 3, 3: 5 };
+
+/** Groups a player's military tokens by their scored VP value (win tokens: +1/+3/+5 by Age,
+ *  lose tokens: always -1, tie tokens: 0), sorted best-first. */
+export function summarizeMilitaryTokens(tokens: MilitaryToken[]): { value: number; count: number }[] {
+  const counts = new Map<number, number>();
+  for (const t of tokens) {
+    const value = t.result === "win" ? AGE_TOKEN_VALUE[t.age] : t.result === "lose" ? -1 : 0;
+    counts.set(value, (counts.get(value) ?? 0) + 1);
+  }
+  return [...counts.entries()].sort((a, b) => b[0] - a[0]).map(([value, count]) => ({ value, count }));
 }
 
 export function estimateShields(builtCardIds: string[], wonderId: string, wonderSide: "A" | "B", wonderStagesBuilt: number): number {
