@@ -1,8 +1,8 @@
 import type { GameStateView } from "@sw/shared";
 import { COLOR_VAR } from "../lib/colors";
 import { LeaderTooltip } from "./LeaderTooltip";
-import { CardEffectsView, CostView } from "./CardEffects";
-import { cardById, leaderById, wonderSideOf, RESOURCE_ICON } from "../lib/format";
+import { CardEffectsView, CostView, ResourceIcon } from "./CardEffects";
+import { cardById, leaderById, wonderSideOf } from "../lib/format";
 
 interface Props {
   you: GameStateView["you"];
@@ -19,7 +19,7 @@ export function SelfPanel({ you }: Props) {
         </div>
         {wonderSide.startingResource && (
           <div className="wonder-starting-bonus">
-            Starting resource: {RESOURCE_ICON[wonderSide.startingResource]}
+            Starting resource: <ResourceIcon type={wonderSide.startingResource} />
           </div>
         )}
         {wonderSide.startingEffects && wonderSide.startingEffects.length > 0 && (

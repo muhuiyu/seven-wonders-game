@@ -1,8 +1,8 @@
 import type { CardColor, GameStateView } from "@sw/shared";
 import { COLOR_VAR } from "../lib/colors";
 import { HoverTooltip } from "./HoverTooltip";
-import { CardEffectsView } from "./CardEffects";
-import { cardById, countByColor, estimateShields, leaderById, wonderSideOf, RESOURCE_ICON } from "../lib/format";
+import { CardEffectsView, ResourceIcon } from "./CardEffects";
+import { cardById, countByColor, estimateShields, leaderById, wonderSideOf } from "../lib/format";
 
 interface Props {
   state: GameStateView;
@@ -40,7 +40,7 @@ export function OpponentStrip({ state }: Props) {
                 }
               >
                 <div className="wonder-starting-bonus">
-                  {wonderSide.startingResource ? RESOURCE_ICON[wonderSide.startingResource] : "🏛️ starting bonus"}
+                  {wonderSide.startingResource ? <ResourceIcon type={wonderSide.startingResource} /> : "🏛️ starting bonus"}
                 </div>
               </HoverTooltip>
             )}

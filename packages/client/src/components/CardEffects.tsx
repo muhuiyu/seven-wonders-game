@@ -3,7 +3,7 @@ import type { Card, CardColor, CardEffect, Cost, PlayerScope, ResourceType, Scie
 import { COLOR_LABEL } from "../lib/format";
 import { RESOURCE_IMG, SCIENCE_IMG, SHIELD_IMG } from "../lib/icons";
 
-function ResourceIcon({ type }: { type: ResourceType }) {
+export function ResourceIcon({ type }: { type: ResourceType }) {
   return <img className="icon-symbol" src={RESOURCE_IMG[type]} alt={type} title={type} />;
 }
 
