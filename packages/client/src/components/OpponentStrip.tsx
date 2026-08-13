@@ -9,18 +9,27 @@ interface Props {
 }
 
 export function OpponentStrip({ state }: Props) {
-  const opponentIds = state.seats.filter((id) => id !== "human");
+  const n = state.seats.length;
+  const idx = state.seats.indexOf("human");
+  // Order left-to-right as seen across the table: left neighbor first, right neighbor last.
+  const opponentIds = Array.from({ length: n - 1 }, (_, k) => state.seats[(idx - 1 - k + 2 * n) % n]!);
 
   return (
     <div className="opponent-strip">
-      {opponentIds.map((id) => {
+      {opponentIds.map((id, i) => {
         const p = state.players[id]!;
         const wonderSide = wonderSideOf(p.wonderId, p.wonderSide);
         const colors = countByColor(p.builtCardIds);
         const shields = estimateShields(p.builtCardIds, p.wonderId, p.wonderSide, p.wonderStagesBuilt);
+        const isLeftNeighbor = i === 0;
+        const isRightNeighbor = i === opponentIds.length - 1;
         return (
           <div key={id} className="opponent-card">
-            <div className="name">{p.name}</div>
+            <div className="name">
+              {isLeftNeighbor && <span className="neighbor-tag neighbor-tag-left">◀ Left</span>}
+              {p.name}
+              {isRightNeighbor && <span className="neighbor-tag neighbor-tag-right">Right ▶</span>}
+            </div>
             <div className="wonder-name">
               <div>
                 {wonderSide.wonderName} ({p.wonderSide})

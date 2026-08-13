@@ -262,7 +262,12 @@ button {
   min-width: 190px;
   flex: 1;
 }
-.opponent-card .name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+.opponent-card .name { font-weight: 700; font-size: 14px; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.opponent-card:has(.neighbor-tag-left) { border-color: #5b8def; box-shadow: inset 3px 0 0 #5b8def; }
+.opponent-card:has(.neighbor-tag-right) { border-color: #e0a83c; box-shadow: inset -3px 0 0 #e0a83c; }
+.neighbor-tag { font-size: 10px; font-weight: 700; letter-spacing: 0.02em; padding: 2px 6px; border-radius: 999px; white-space: nowrap; }
+.neighbor-tag-left { background: rgba(91, 141, 239, 0.18); color: #8fb4f7; }
+.neighbor-tag-right { background: rgba(224, 168, 60, 0.18); color: #e0b878; }
 .opponent-card .wonder-name { display: flex; flex-direction: column; gap: 2px; font-size: 11px; color: var(--text-dim); margin-bottom: 6px; }
 .opponent-card .wonder-starting-bonus { font-size: 11px; margin-bottom: 6px; width: fit-content; cursor: default; }
 .opponent-card .row { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-dim); margin-top: 2px; }

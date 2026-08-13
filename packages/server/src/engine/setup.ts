@@ -51,6 +51,7 @@ export function createGame(opts: SetupOptions): GameState {
   const humanId = "human";
   const botIds = botWonderIds.map((_, i) => `bot-${i + 1}`);
   const seats = shuffle([humanId, ...botIds], rng);
+  const botNames = new Map(botIds.map((botId, i) => [botId, BOT_NAMES[i % BOT_NAMES.length]!]));
 
   const wonderAssignment = new Map<string, { id: string; side: "A" | "B" }>();
   wonderAssignment.set(humanId, { id: humanWonderId, side: opts.humanWonderSide ?? (rng() < 0.5 ? "A" : "B") });
@@ -93,7 +94,7 @@ export function createGame(opts: SetupOptions): GameState {
     if (botStrategy) console.log(`[bot-strategy] ${playerId} (${wonder.id}) -> ${botStrategy}`);
     players[playerId] = {
       id: playerId,
-      name: playerId === humanId ? opts.humanName : BOT_NAMES[i % BOT_NAMES.length]!,
+      name: playerId === humanId ? opts.humanName : botNames.get(playerId)!,
       isBot,
       botStrategy,
       wonderId: wonder.id,
