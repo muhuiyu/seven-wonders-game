@@ -15,3 +15,13 @@ export type ProductionOption = {
 
 export type NeighborSide = "left" | "right";
 export type PlayerScope = "self" | "leftNeighbor" | "rightNeighbor" | "bothNeighbors";
+
+/** "bank" represents Bilkis's once-per-turn direct bank purchase — no neighbor is credited for it. */
+export type PurchaseSide = NeighborSide | "bank";
+
+/** One unit of a resource bought from a neighbor (or the bank) to cover a shortfall in own production. */
+export interface ResourcePurchase {
+  resource: ResourceType;
+  from: PurchaseSide;
+  unitCost: number;
+}

@@ -1,15 +1,12 @@
-import type { Cost, CostOption, NeighborSide, PaymentPlan, ResourceType } from "@sw/shared";
+import type { Cost, CostOption, NeighborSide, PurchaseSide, ResourcePurchase, ResourceType } from "@sw/shared";
 import { ALL_RESOURCES } from "@sw/shared";
 import type { ProductionSlot } from "./productionSlots.js";
-
-/** "bank" represents Bilkis's once-per-turn direct bank purchase — no neighbor is credited for it. */
-export type PurchaseSide = NeighborSide | "bank";
 
 export interface AffordabilityResult {
   affordable: boolean;
   totalCoinCost: number; // costOption.coins + trade purchases
   ownChoices: Record<string, ResourceType>;
-  purchases: { resource: ResourceType; from: PurchaseSide; unitCost: number }[];
+  purchases: ResourcePurchase[];
 }
 
 export type TradeUnitCostFn = (resource: ResourceType, side: NeighborSide) => number;

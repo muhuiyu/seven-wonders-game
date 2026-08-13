@@ -1,7 +1,8 @@
 import { useState } from "react";
 import type { GameStateView, RoundAction } from "@sw/shared";
 import { CardTile } from "./CardTile";
-import { cardById, describeCard, describeCost, wonderSideOf } from "../lib/format";
+import { CostView, PurchasesView } from "./CardEffects";
+import { cardById, describeCard, wonderSideOf } from "../lib/format";
 
 interface Props {
   you: GameStateView["you"];
@@ -42,23 +43,29 @@ export function Hand({ you, onSubmit, submitting }: Props) {
       {card && selectedView && (
         <div className="action-panel">
           <strong>{card.name}</strong>
-          <button
-            className="action-btn primary"
-            disabled={submitting || !selectedView.buildAffordable || selectedView.alreadyBuilt}
-            onClick={() => submit({ type: "build", cardId: card.id })}
-            title={describeCard(card)}
-          >
-            Build {selectedView.buildFree ? "(free)" : `— ${describeCost(card.cost)}`}
-          </button>
-          {nextStage && (
+          <div className="action-btn-group">
             <button
-              className="action-btn"
-              disabled={submitting || !selectedView.wonderStageAffordable}
-              onClick={() => submit({ type: "buildWonderStage", cardId: card.id })}
-              title={describeCard({ ...card, effects: nextStage.effects })}
+              className="action-btn primary"
+              disabled={submitting || !selectedView.buildAffordable || selectedView.alreadyBuilt}
+              onClick={() => submit({ type: "build", cardId: card.id })}
+              title={describeCard(card)}
             >
-              Build wonder stage {you.wonderStagesBuilt + 1} — {describeCost(nextStage.cost)}
+              Build {selectedView.buildFree ? "(free)" : <>— <CostView cost={card.cost} /></>}
             </button>
+            {selectedView.buildAffordable && <PurchasesView purchases={selectedView.buildPurchases} />}
+          </div>
+          {nextStage && (
+            <div className="action-btn-group">
+              <button
+                className="action-btn"
+                disabled={submitting || !selectedView.wonderStageAffordable}
+                onClick={() => submit({ type: "buildWonderStage", cardId: card.id })}
+                title={describeCard({ ...card, effects: nextStage.effects })}
+              >
+                Build wonder stage {you.wonderStagesBuilt + 1} — <CostView cost={nextStage.cost} />
+              </button>
+              {selectedView.wonderStageAffordable && <PurchasesView purchases={selectedView.wonderStagePurchases} />}
+            </div>
           )}
           <button className="action-btn" disabled={submitting} onClick={() => submit({ type: "discard", cardId: card.id })}>
             Discard for 🪙3

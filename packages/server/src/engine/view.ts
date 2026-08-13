@@ -12,8 +12,10 @@ export function buildView(state: GameState, viewerId: string): GameStateView {
       cardId,
       buildAffordable: buildCheck.legal,
       buildFree: buildCheck.legal && buildCheck.free,
+      buildPurchases: buildCheck.payment?.purchases ?? [],
       wonderStageAffordable: stageCheck.legal,
       wonderStageFree: false,
+      wonderStagePurchases: stageCheck.payment?.purchases ?? [],
       alreadyBuilt: you.builtCardIds.includes(cardId),
     };
   });

@@ -1,6 +1,5 @@
 import type { GameStateView } from "@sw/shared";
 import { COLOR_VAR } from "../lib/colors";
-import { LeaderTooltip } from "./LeaderTooltip";
 import { CardEffectsView, CostView, ResourceIcon } from "./CardEffects";
 import { cardById, leaderById, wonderSideOf } from "../lib/format";
 
@@ -74,9 +73,14 @@ export function SelfPanel({ you }: Props) {
             {you.recruitedLeaderIds.map((id, i) => {
               const leader = leaderById(id);
               return (
-                <LeaderTooltip key={id + i} leader={leader}>
-                  <span className="leader-chip">{leader.name}</span>
-                </LeaderTooltip>
+                <div key={id + i} className="leader-card">
+                  <div className="card-name">{leader.name}</div>
+                  {leader.effects.length > 0 && (
+                    <div className="card-effect">
+                      <CardEffectsView card={leader} />
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>

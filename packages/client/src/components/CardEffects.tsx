@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { Card, CardColor, CardEffect, Cost, PlayerScope, ResourceType, ScienceSymbol } from "@sw/shared";
+import type { Card, CardColor, CardEffect, Cost, PlayerScope, ResourcePurchase, ResourceType, ScienceSymbol } from "@sw/shared";
 import { COLOR_LABEL } from "../lib/format";
 import { RESOURCE_IMG, SCIENCE_IMG, SHIELD_IMG } from "../lib/icons";
 
@@ -58,6 +58,30 @@ export function CostView({ cost }: { cost: Cost }) {
     );
   });
   return <>{options.reduce<ReactNode[]>((acc, el, i) => (i === 0 ? [el] : [...acc, " or ", el]), [])}</>;
+}
+
+const PURCHASE_SIDE_LABEL: Record<ResourcePurchase["from"], string> = {
+  left: "left neighbor",
+  right: "right neighbor",
+  bank: "the bank",
+};
+
+/** Coins owed to each neighbor (or the bank) to cover resources this player can't produce themselves. Renders nothing when every resource is self-sufficient. */
+export function PurchasesView({ purchases }: { purchases: ResourcePurchase[] }) {
+  if (purchases.length === 0) return null;
+  const bySide = new Map<ResourcePurchase["from"], number>();
+  for (const p of purchases) bySide.set(p.from, (bySide.get(p.from) ?? 0) + p.unitCost);
+  return (
+    <div className="purchase-note">
+      Pay{" "}
+      {[...bySide.entries()].map(([side, coins], i) => (
+        <span key={side}>
+          {i > 0 && ", "}
+          🪙{coins} to {PURCHASE_SIDE_LABEL[side]}
+        </span>
+      ))}
+    </div>
+  );
 }
 
 export function EffectView({ effect }: { effect: CardEffect }) {

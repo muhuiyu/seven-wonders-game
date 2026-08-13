@@ -1,4 +1,4 @@
-import type { ResourceType, NeighborSide } from "./resources.js";
+import type { ResourceType, NeighborSide, ResourcePurchase } from "./resources.js";
 import type { ScienceSymbol, MilitaryResult } from "./cards.js";
 
 export type Age = 1 | 2 | 3;
@@ -105,8 +105,11 @@ export interface HandCardView {
   cardId: string;
   buildAffordable: boolean;
   buildFree: boolean;
+  /** Resource units the build cost can't cover from own production — bought from a neighbor/bank. Empty when self-sufficient (or free). */
+  buildPurchases: ResourcePurchase[];
   wonderStageAffordable: boolean;
   wonderStageFree: boolean;
+  wonderStagePurchases: ResourcePurchase[];
   alreadyBuilt: boolean; // can't build a duplicate civilian/etc. card
 }
 

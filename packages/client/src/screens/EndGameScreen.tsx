@@ -1,32 +1,42 @@
-import type { GameStateView } from "@sw/shared";
-import { wonderSideOf } from "../lib/format";
+import type { GameStateView } from "@sw/shared"
+import { wonderSideOf } from "../lib/format"
 
 interface Props {
-  state: GameStateView;
-  onPlayAgain: () => void;
+  state: GameStateView
+  onPlayAgain: () => void
 }
 
-type CategoryKey = "military" | "treasury" | "wonder" | "civil" | "science" | "guild" | "commerce" | "cities" | "leaders" | "debt";
+type CategoryKey =
+  | "military"
+  | "treasury"
+  | "wonder"
+  | "civil"
+  | "science"
+  | "guild"
+  | "commerce"
+  | "cities"
+  | "leaders"
+  | "debt"
 
 const BASE_CATEGORIES: { key: CategoryKey; label: string }[] = [
-  { key: "military", label: "Military" },
-  { key: "treasury", label: "Treasury" },
-  { key: "wonder", label: "Wonder" },
-  { key: "civil", label: "Civil" },
-  { key: "science", label: "Science" },
-  { key: "guild", label: "Guild" },
-  { key: "commerce", label: "Commerce" },
-];
+  { key: "military", label: "🔴 Military" },
+  { key: "treasury", label: "🪙 Treasury" },
+  { key: "wonder", label: "🌟 Wonder" },
+  { key: "civil", label: "🔵 Civil" },
+  { key: "science", label: "🟢 Science" },
+  { key: "guild", label: "🟣 Guild" },
+  { key: "commerce", label: "🟡 Commerce" },
+]
 
 export function EndGameScreen({ state, onPlayAgain }: Props) {
-  const scores = [...(state.finalScores ?? [])].sort((a, b) => b.total - a.total);
-  const winnerId = scores[0]?.playerId;
+  const scores = [...(state.finalScores ?? [])].sort((a, b) => b.total - a.total)
+  const winnerId = scores[0]?.playerId
   const CATEGORIES: { key: CategoryKey; label: string }[] = [
     ...BASE_CATEGORIES,
-    ...(state.expansions.cities ? [{ key: "cities" as const, label: "Cities" }] : []),
+    ...(state.expansions.cities ? [{ key: "cities" as const, label: "⚫ Cities" }] : []),
     ...(state.expansions.leaders ? [{ key: "leaders" as const, label: "Leaders" }] : []),
     ...(state.expansions.cities ? [{ key: "debt" as const, label: "Debt" }] : []),
-  ];
+  ]
 
   return (
     <div className="endgame-screen">
@@ -52,8 +62,8 @@ export function EndGameScreen({ state, onPlayAgain }: Props) {
             </thead>
             <tbody>
               {scores.map((s) => {
-                const p = state.players[s.playerId]!;
-                const wonder = wonderSideOf(p.wonderId, p.wonderSide);
+                const p = state.players[s.playerId]!
+                const wonder = wonderSideOf(p.wonderId, p.wonderSide)
                 return (
                   <tr key={s.playerId} className={s.playerId === winnerId ? "winner-row" : ""}>
                     <td>{p.name}</td>
@@ -67,7 +77,7 @@ export function EndGameScreen({ state, onPlayAgain }: Props) {
                       <b>{s.total}</b>
                     </td>
                   </tr>
-                );
+                )
               })}
             </tbody>
           </table>
@@ -78,5 +88,5 @@ export function EndGameScreen({ state, onPlayAgain }: Props) {
         </button>
       </div>
     </div>
-  );
+  )
 }
