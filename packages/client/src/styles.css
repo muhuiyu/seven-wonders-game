@@ -512,7 +512,7 @@ button {
 
 .main-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1fr 260px;
   gap: 12px;
   flex: 1;
   min-height: 0;
@@ -567,19 +567,20 @@ button {
 }
 
 .built-cards-columns {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 10px;
+  column-width: 138px;
+  column-count: 6;
+  column-gap: 10px;
 }
 .built-cards-column {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  break-inside: avoid;
+  margin-bottom: 10px;
 }
 .built-card {
-  min-width: 150px;
-  max-width: 150px;
+  min-width: 138px;
+  max-width: 138px;
   border-radius: 10px;
   padding: 10px;
   color: #fff;
