@@ -1,4 +1,4 @@
-import { getCard, getLeaderCard, getWonderSide, type CardEffect, type GameState, type RoundAction } from "@sw/shared";
+import { getCard, getLeaderCard, getWonderSide, type BotStrategyId, type CardColor, type CardEffect, type GameState, type RoundAction } from "@sw/shared";
 import { applyAction } from "../engine/applyAction.js";
 import { applyLeaderAction } from "../engine/leaders.js";
 import { getNeighbors } from "../engine/seating.js";
@@ -22,6 +22,71 @@ const WEIGHTS = {
   tradeDiscountBonus: 1.5,
 };
 
+/**
+ * Per-archetype nudges layered on top of WEIGHTS: `colorMultiplier` scales the VP delta
+ * attributable to building a card of that color, `weightOverrides` replaces specific
+ * WEIGHTS entries outright. Assigned once per bot at setup (see strategyAssignment.ts)
+ * and kept for the whole game.
+ */
+const STRATEGY_PROFILES: Record<BotStrategyId, { colorMultiplier: Partial<Record<CardColor, number>>; weightOverrides?: Partial<typeof WEIGHTS> }> = {
+  balanced: { colorMultiplier: {} },
+  science: { colorMultiplier: { green: 1.8 } },
+  commerce: { colorMultiplier: { yellow: 1.7 }, weightOverrides: { coin: WEIGHTS.coin * 1.5, tradeDiscountBonus: WEIGHTS.tradeDiscountBonus * 1.5 } },
+  civilian: { colorMultiplier: { blue: 1.6 } },
+  military: { colorMultiplier: {}, weightOverrides: { militaryDeficitReduction: WEIGHTS.militaryDeficitReduction * 1.8, shieldBaseline: WEIGHTS.shieldBaseline * 1.8 } },
+};
+
+/**
+ * Leaders whose own effect rewards color *diversity* actively fight a specialized
+ * archetype's color-multiplier bonuses — so recruiting one pulls the bot back toward
+ * balanced play. Value is how strongly to pull (0 = no effect, 1 = fully balanced,
+ * ignoring the assigned archetype entirely).
+ */
+const BALANCE_PULL_LEADERS: Record<string, number> = {
+  plato: 1, // rewards one of every non-military color — full specialization directly opposes it
+  justinian: 0.5, // rewards a blue+red+green set — partial pull away from single-color focus
+};
+
+function balancePull(state: GameState, playerId: string): number {
+  const recruited = state.players[playerId]!.recruitedLeaderIds;
+  return recruited.reduce((max, leaderId) => Math.max(max, BALANCE_PULL_LEADERS[leaderId] ?? 0), 0);
+}
+
+/**
+ * Resolves the effective color multipliers/weights a bot scores with this turn: starts
+ * from its assigned archetype, blends that toward the neutral "balanced" profile by
+ * `balancePull` (e.g. a Plato recruit), then layers on the Age III guild nudge — once a
+ * bot has actually built one of these guilds, its own future builds of the color that
+ * guild rewards *itself* (not neighbors — the bot can't influence their hands) become a
+ * bit more attractive. Only the two guilds with a `scope: "self"` effect give the bot
+ * anything it can actually act on; the guild nudge applies after the balance pull since
+ * it's a concrete, already-built payoff rather than a specialization bet.
+ */
+function effectiveStrategyWeights(state: GameState, playerId: string, strategy: BotStrategyId): { colorMultiplier: Partial<Record<CardColor, number>>; weights: typeof WEIGHTS } {
+  const profile = STRATEGY_PROFILES[strategy];
+  const pull = balancePull(state, playerId);
+
+  const colorMultiplier: Partial<Record<CardColor, number>> = {};
+  for (const [color, mult] of Object.entries(profile.colorMultiplier) as [CardColor, number][]) {
+    colorMultiplier[color] = 1 + (mult - 1) * (1 - pull);
+  }
+
+  const weights = { ...WEIGHTS };
+  for (const [key, value] of Object.entries(profile.weightOverrides ?? {}) as [keyof typeof WEIGHTS, number][]) {
+    weights[key] = WEIGHTS[key] + (value - WEIGHTS[key]) * (1 - pull);
+  }
+
+  const built = state.players[playerId]!.builtCardIds;
+  if (built.includes("shipowners-guild")) {
+    for (const color of ["brown", "grey", "purple"] as const) colorMultiplier[color] = (colorMultiplier[color] ?? 1) + 0.3;
+  }
+  if (built.includes("builders-guild")) {
+    weights.wonderStageBonus *= 1.5;
+  }
+
+  return { colorMultiplier, weights };
+}
+
 /** The effects a candidate action would actually put into play — from the card, or from the wonder stage it funds. */
 function effectsForAction(state: GameState, playerId: string, action: RoundAction): CardEffect[] {
   if (action.type === "build") return getCard(action.cardId).effects;
@@ -40,7 +105,10 @@ function sortKey(action: RoundAction): string {
 }
 
 function scoreCandidate(state: GameState, playerId: string, action: RoundAction): number {
-  if (action.type === "discard") return 3 * WEIGHTS.coin;
+  const strategy = state.players[playerId]!.botStrategy ?? "balanced";
+  const { colorMultiplier, weights } = effectiveStrategyWeights(state, playerId, strategy);
+
+  if (action.type === "discard") return 3 * weights.coin;
 
   const clone = structuredClone(state);
   let extraTurn: boolean;
@@ -53,7 +121,8 @@ function scoreCandidate(state: GameState, playerId: string, action: RoundAction)
   const before = state.players[playerId]!;
   const after = clone.players[playerId]!;
 
-  const valueDelta = estimatePlayerValue(clone, playerId) - estimatePlayerValue(state, playerId);
+  let valueDelta = estimatePlayerValue(clone, playerId) - estimatePlayerValue(state, playerId);
+  if (action.type === "build") valueDelta *= colorMultiplier[getCard(action.cardId).color] ?? 1;
   const coinDelta = after.coins - before.coins;
 
   const { left, right } = getNeighbors(state, playerId);
@@ -63,17 +132,17 @@ function scoreCandidate(state: GameState, playerId: string, action: RoundAction)
   const deficitAfter = Math.max(0, leftShields - getShieldCount(after)) + Math.max(0, rightShields - getShieldCount(after));
 
   let score = 0;
-  score += valueDelta * WEIGHTS.vp;
-  score += coinDelta * WEIGHTS.coin;
-  score += (deficitBefore - deficitAfter) * WEIGHTS.militaryDeficitReduction;
-  if (action.type === "buildWonderStage") score += WEIGHTS.wonderStageBonus;
-  if (action.type === "build" && (getCard(action.cardId).chainUnlocks?.length ?? 0) > 0) score += WEIGHTS.chainingBonus;
-  if (extraTurn) score += WEIGHTS.extraTurnBonus;
+  score += valueDelta * weights.vp;
+  score += coinDelta * weights.coin;
+  score += (deficitBefore - deficitAfter) * weights.militaryDeficitReduction;
+  if (action.type === "buildWonderStage") score += weights.wonderStageBonus;
+  if (action.type === "build" && (getCard(action.cardId).chainUnlocks?.length ?? 0) > 0) score += weights.chainingBonus;
+  if (extraTurn) score += weights.extraTurnBonus;
 
   for (const effect of effectsForAction(state, playerId, action)) {
-    if (effect.kind === "resource") score += effect.production.qty * WEIGHTS.resourceUnit;
-    if (effect.kind === "shields") score += effect.count * WEIGHTS.shieldBaseline;
-    if (effect.kind === "tradeDiscount") score += WEIGHTS.tradeDiscountBonus;
+    if (effect.kind === "resource") score += effect.production.qty * weights.resourceUnit;
+    if (effect.kind === "shields") score += effect.count * weights.shieldBaseline;
+    if (effect.kind === "tradeDiscount") score += weights.tradeDiscountBonus;
   }
 
   return score;
@@ -93,6 +162,14 @@ export function chooseBotAction(state: GameState, playerId: string): RoundAction
       bestScore = score;
     }
   }
+
+  const strategy = state.players[playerId]!.botStrategy ?? "balanced";
+  const pull = balancePull(state, playerId);
+  const color = best.type === "build" || best.type === "buildWonderStage" ? getCard(best.cardId).color : undefined;
+  console.log(
+    `[bot:${playerId}] strategy=${strategy}${pull > 0 ? ` (balance-pull=${pull.toFixed(2)})` : ""} age=${state.age} round=${state.round} -> ${best.type} ${best.cardId}${color ? ` (${color})` : ""} score=${bestScore.toFixed(2)}`,
+  );
+
   return best;
 }
 

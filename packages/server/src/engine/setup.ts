@@ -12,6 +12,7 @@ import {
   type PlayerState,
 } from "@sw/shared";
 import { mulberry32, shuffle } from "./rng.js";
+import { assignBotStrategy } from "../bot/strategyAssignment.js";
 
 export interface SetupOptions {
   playerCount: number;
@@ -87,10 +88,14 @@ export function createGame(opts: SetupOptions): GameState {
   seats.forEach((playerId, i) => {
     const wonder = wonderAssignment.get(playerId)!;
     const hand = expansions.leaders ? [] : ageIDeck.slice(i * handSize, i * handSize + handSize);
+    const isBot = playerId !== humanId;
+    const botStrategy = isBot ? assignBotStrategy(wonder.id, rng) : undefined;
+    if (botStrategy) console.log(`[bot-strategy] ${playerId} (${wonder.id}) -> ${botStrategy}`);
     players[playerId] = {
       id: playerId,
       name: playerId === humanId ? opts.humanName : BOT_NAMES[i % BOT_NAMES.length]!,
-      isBot: playerId !== humanId,
+      isBot,
+      botStrategy,
       wonderId: wonder.id,
       wonderSide: wonder.side,
       wonderStagesBuilt: 0,

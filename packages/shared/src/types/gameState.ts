@@ -3,6 +3,9 @@ import type { ScienceSymbol, MilitaryResult } from "./cards.js";
 
 export type Age = 1 | 2 | 3;
 
+export const BOT_STRATEGIES = ["balanced", "science", "commerce", "civilian", "military"] as const;
+export type BotStrategyId = (typeof BOT_STRATEGIES)[number];
+
 export interface MilitaryToken {
   age: Age;
   result: MilitaryResult;
@@ -12,6 +15,7 @@ export interface PlayerState {
   id: string;
   name: string;
   isBot: boolean;
+  botStrategy?: BotStrategyId; // archetype the bot heuristic leans toward for the whole game; undefined for the human
   wonderId: string;
   wonderSide: "A" | "B";
   wonderStagesBuilt: number;
