@@ -8,6 +8,8 @@
     "dev:server": "bun run --filter @sw/server dev",
     "dev:client": "bun run --filter @sw/client dev",
     "dev:stop": "lsof -ti :4000,5173 | xargs kill 2>/dev/null; echo 'stopped server (4000) and client (5173)'",
+    "build": "bun run --filter @sw/client build",
+    "start": "bun run --filter @sw/server start",
     "test": "bun run --filter @sw/server test",
     "typecheck": "bun run tsc -b"
   },
