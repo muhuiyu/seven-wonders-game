@@ -1,5 +1,6 @@
 import type { GameStateView, RoundAction } from "@sw/shared";
-import { describeLeader, leaderById } from "../lib/format";
+import { CardEffectsView } from "./CardEffects";
+import { leaderById } from "../lib/format";
 
 interface Props {
   you: GameStateView["you"];
@@ -23,7 +24,9 @@ export function LeaderDraftPanel({ you, onSubmit, submitting }: Props) {
             >
               <div className="leader-name">{leader.name}</div>
               <div className="leader-cost">🪙{leader.coinCost}</div>
-              <div className="leader-effect">{describeLeader(leader)}</div>
+              <div className="leader-effect">
+                <CardEffectsView card={leader} />
+              </div>
             </button>
           );
         })}

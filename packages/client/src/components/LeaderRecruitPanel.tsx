@@ -1,6 +1,6 @@
 import type { GameStateView, RoundAction } from "@sw/shared";
-import { CostView } from "./CardEffects";
-import { describeLeader, leaderById, wonderSideOf } from "../lib/format";
+import { CardEffectsView, CostView } from "./CardEffects";
+import { leaderById, wonderSideOf } from "../lib/format";
 
 interface Props {
   you: GameStateView["you"];
@@ -21,7 +21,9 @@ export function LeaderRecruitPanel({ you, onSubmit, submitting }: Props) {
           <div key={view.cardId} className="leader-recruit-card">
             <div className="leader-recruit-info">
               <div className="leader-recruit-name">{leader.name}</div>
-              <div className="leader-recruit-effect">{describeLeader(leader)}</div>
+              <div className="leader-recruit-effect">
+                <CardEffectsView card={leader} />
+              </div>
             </div>
             <button
               className="action-btn primary"

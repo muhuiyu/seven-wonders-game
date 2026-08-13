@@ -1,4 +1,4 @@
-import { getCard, getLeaderCard, getWonderSide, type Age, type Card, type CardColor, type CardEffect, type Cost, type LeaderCard, type MilitaryToken, type ResourceType, type ScienceSymbol } from "@sw/shared";
+import { getCard, getLeaderCard, getWonderSide, type Age, type Card, type CardColor, type CardEffect, type Cost, type MilitaryToken, type ResourceType, type ScienceSymbol } from "@sw/shared";
 import { COLOR_EMOJI } from "./colors";
 
 export const RESOURCE_ICON: Record<ResourceType, string> = {
@@ -144,10 +144,6 @@ export function describeEffect(effect: CardEffect): string {
 
 export function describeCard(card: Card): string {
   return card.effects.map(describeEffect).join(" · ");
-}
-
-export function describeLeader(leader: LeaderCard): string {
-  return leader.effects.map(describeEffect).join(" · ");
 }
 
 export function cardById(id: string) {
