@@ -22,7 +22,12 @@ export function OpponentStrip({ state }: Props) {
           <div key={id} className="opponent-card">
             <div className="name">{p.name}</div>
             <div className="wonder-name">
-              {wonderSide.wonderName} ({p.wonderSide}) · stage {p.wonderStagesBuilt}/{wonderSide.stages.length}
+              <div>
+                {wonderSide.wonderName} ({p.wonderSide})
+              </div>
+              <div>
+                stage {p.wonderStagesBuilt}/{wonderSide.stages.length}
+              </div>
             </div>
             {(wonderSide.startingResource || (wonderSide.startingEffects && wonderSide.startingEffects.length > 0)) && (
               <HoverTooltip
@@ -42,8 +47,7 @@ export function OpponentStrip({ state }: Props) {
             <div className="row">
               <span>🪙 {p.coins}</span>
               <span>🛡️ {shields}</span>
-              <span>🂠 {p.handSize}</span>
-              {p.recruitedLeaderIds.length > 0 && (
+              {p.recruitedLeaderIds.length > 0 ? (
                 <HoverTooltip
                   content={p.recruitedLeaderIds.map((id, i) => {
                     const leader = leaderById(id);
@@ -61,6 +65,8 @@ export function OpponentStrip({ state }: Props) {
                 >
                   <span>👑 {p.recruitedLeaderIds.length}</span>
                 </HoverTooltip>
+              ) : (
+                <span>👑 0</span>
               )}
             </div>
             {(p.diplomacyTokens > 0 || p.debtVp < 0) && (
