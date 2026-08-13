@@ -69,9 +69,9 @@ export function createGame(opts: SetupOptions): GameState {
     ageIDeck.push(...selectBlackCards(1, playerCount, rng));
     ageIIDeck.push(...selectBlackCards(2, playerCount, rng));
     ageIIIDeck.push(...selectBlackCards(3, playerCount, rng));
-    shuffle(ageIDeck, rng);
-    shuffle(ageIIDeck, rng);
-    shuffle(ageIIIDeck, rng);
+    ageIDeck.splice(0, ageIDeck.length, ...shuffle(ageIDeck, rng));
+    ageIIDeck.splice(0, ageIIDeck.length, ...shuffle(ageIIDeck, rng));
+    ageIIIDeck.splice(0, ageIIIDeck.length, ...shuffle(ageIIIDeck, rng));
   }
   const handSize = expansions.cities ? 8 : 7;
 
