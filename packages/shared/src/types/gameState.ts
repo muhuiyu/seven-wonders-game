@@ -38,11 +38,11 @@ export interface PlayerState {
 
 export type RoundAction =
   | { type: "build"; cardId: string; payment?: PaymentPlan }
-  | { type: "buildWonderStage"; cardId: string; payment?: PaymentPlan }
+  | { type: "buildWonderStage"; cardId: string; payment?: PaymentPlan; discardPickId?: string }
   | { type: "discard"; cardId: string }
   | { type: "draftLeader"; cardId: string }
-  | { type: "recruitLeader"; cardId: string }
-  | { type: "buildWonderStageFromLeader"; cardId: string }
+  | { type: "recruitLeader"; cardId: string; discardPickId?: string }
+  | { type: "buildWonderStageFromLeader"; cardId: string; discardPickId?: string }
   | { type: "discardLeaderForCoins"; cardId: string };
 
 export interface PaymentPlan {

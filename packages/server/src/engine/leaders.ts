@@ -1,9 +1,8 @@
-import { getCard, getLeaderCard, getWonderSide, type GameState, type RoundAction } from "@sw/shared";
+import { getLeaderCard, getWonderSide, type GameState, type RoundAction } from "@sw/shared";
 import { getAffordability, getEffectiveCost } from "./actionResolution.js";
 import { applyImmediateEffects } from "./effects.js";
-import { payAndCredit } from "./applyAction.js";
+import { payAndCredit, resolveDiscardPileBuild } from "./applyAction.js";
 import { getActiveEffectSources } from "./effectSources.js";
-import { estimatePlayerValue } from "./scoring.js";
 import { getNeighborIds } from "./seating.js";
 
 /** A player's Leader recruitment cost for `baseCost`, after their own and their neighbors' wonder-granted discounts (Roma). */
@@ -30,40 +29,6 @@ function removeFrom(list: string[], id: string, label: string): void {
   const idx = list.indexOf(id);
   if (idx === -1) throw new Error(`${label} ${id} not found`);
   list.splice(idx, 1);
-}
-
-/** After a Solomon recruit, auto-pick and build for free the highest-value card in the shared discard pile. */
-function recycleBestDiscard(state: GameState, playerId: string): void {
-  const player = state.players[playerId]!;
-  let bestId: string | null = null;
-  let bestScore = -Infinity;
-
-  for (const cardId of new Set(state.discardPile)) {
-    if (player.builtCardIds.includes(cardId)) continue;
-    const clone = structuredClone(state);
-    const clonedPlayer = clone.players[playerId]!;
-    const idx = clone.discardPile.indexOf(cardId);
-    if (idx === -1) continue;
-    clone.discardPile.splice(idx, 1);
-    clonedPlayer.builtCardIds.push(cardId);
-    try {
-      applyImmediateEffects(clone, playerId, getCard(cardId).effects);
-    } catch {
-      continue;
-    }
-    const score = estimatePlayerValue(clone, playerId);
-    if (score > bestScore) {
-      bestScore = score;
-      bestId = cardId;
-    }
-  }
-
-  if (bestId === null) return;
-  const idx = state.discardPile.indexOf(bestId);
-  state.discardPile.splice(idx, 1);
-  player.builtCardIds.push(bestId);
-  applyImmediateEffects(state, playerId, getCard(bestId).effects);
-  state.log.push({ round: state.round, age: state.age, message: `${player.name} recycles ${getCard(bestId).name} from the discard pile (Solomon).` });
 }
 
 /** Applies one player's Leader-phase action (draft pick or recruitment choice) to `state` in place. Throws if illegal. */
@@ -103,6 +68,9 @@ export function applyLeaderAction(state: GameState, playerId: string, action: Ro
       age: state.age,
       message: `${player.name} funds a wonder stage (${wonderSide.wonderName}, stage ${player.wonderStagesBuilt}) using ${getLeaderCard(action.cardId).name}.`,
     });
+    if (stage.effects.some((e) => e.kind === "buildFromDiscardPile")) {
+      resolveDiscardPileBuild(state, playerId, action.discardPickId, wonderSide.wonderName);
+    }
     // Wonder-stage builds never grant a bonus turn during the Recruitment phase — there's no follow-up action slot to spend it on.
     void extraTurn;
     return;
@@ -120,8 +88,8 @@ export function applyLeaderAction(state: GameState, playerId: string, action: Ro
     applyImmediateEffects(state, playerId, leader.effects);
     state.log.push({ round: state.round, age: state.age, message: `${player.name} recruits ${leader.name}.` });
 
-    if (leader.effects.some((e) => e.kind === "recycleDiscardOnRecruit") && state.discardPile.length > 0) {
-      recycleBestDiscard(state, playerId);
+    if (leader.effects.some((e) => e.kind === "recycleDiscardOnRecruit")) {
+      resolveDiscardPileBuild(state, playerId, action.discardPickId, leader.name);
     }
     return;
   }

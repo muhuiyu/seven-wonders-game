@@ -87,6 +87,8 @@ export function describeEffect(effect: CardEffect): string {
       return `Build your last card for free at the end of each Age`;
     case "extraTurn":
       return `Take another turn immediately`;
+    case "buildFromDiscardPile":
+      return `Build a free card of your choice from the discard pile`;
     case "diplomacyToken":
       return `Gain a Diplomacy token (skip your next military conflict)`;
     case "opponentsPayOrDebt":
@@ -122,7 +124,7 @@ export function describeEffect(effect: CardEffect): string {
     case "freeBuildForColor":
       return `Build ${COLOR_LABEL[effect.color]} ignoring their resource cost`;
     case "recycleDiscardOnRecruit":
-      return `Immediately build the best available card from the discard pile, for free`;
+      return `Build a free card of your choice from the discard pile`;
     case "redirectDefeatToken":
       return `Your defeat tokens are instead given to your victorious neighbor`;
     case "coinsOnChainBuild":

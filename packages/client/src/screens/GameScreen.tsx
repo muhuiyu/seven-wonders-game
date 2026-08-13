@@ -84,8 +84,10 @@ export function GameScreen({ state, onSubmit, submitting, error, banner }: Props
       </div>
 
       {state.phase === "leaderDraft" && <LeaderDraftPanel you={state.you} onSubmit={onSubmit} submitting={submitting} />}
-      {state.phase === "leaderRecruit" && <LeaderRecruitPanel you={state.you} onSubmit={onSubmit} submitting={submitting} />}
-      {state.phase === "drafting" && <Hand you={state.you} onSubmit={onSubmit} submitting={submitting} />}
+      {state.phase === "leaderRecruit" && (
+        <LeaderRecruitPanel you={state.you} discardPile={state.discardPile} onSubmit={onSubmit} submitting={submitting} />
+      )}
+      {state.phase === "drafting" && <Hand you={state.you} discardPile={state.discardPile} onSubmit={onSubmit} submitting={submitting} />}
     </div>
   );
 }

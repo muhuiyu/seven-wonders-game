@@ -4,6 +4,7 @@ import { applyImmediateEffects, type PendingOpponentEffect } from "./effects.js"
 import { getNeighbors } from "./seating.js";
 import { isFreeViaChain } from "./chaining.js";
 import { getActiveEffectSources } from "./effectSources.js";
+import { estimatePlayerValue } from "./scoring.js";
 
 function removeFromHand(hand: string[], cardId: string): void {
   const idx = hand.indexOf(cardId);
@@ -51,6 +52,62 @@ function applyCoinsOnColorBuild(state: GameState, playerId: string, color: CardC
   for (const effect of getActiveEffectSources(player)) {
     if (effect.kind === "coinsOnColorBuild" && effect.color === color) player.coins += effect.amount;
   }
+}
+
+/** Simulates building each eligible discard-pile card and returns the id that scores highest, for a bot's auto-pick. */
+function pickBestDiscardCard(state: GameState, playerId: string): string | null {
+  const player = state.players[playerId]!;
+  let bestId: string | null = null;
+  let bestScore = -Infinity;
+
+  for (const cardId of new Set(state.discardPile)) {
+    if (player.builtCardIds.includes(cardId)) continue;
+    const clone = structuredClone(state);
+    const clonedPlayer = clone.players[playerId]!;
+    const idx = clone.discardPile.indexOf(cardId);
+    if (idx === -1) continue;
+    clone.discardPile.splice(idx, 1);
+    clonedPlayer.builtCardIds.push(cardId);
+    try {
+      applyImmediateEffects(clone, playerId, getCard(cardId).effects);
+    } catch {
+      continue;
+    }
+    const score = estimatePlayerValue(clone, playerId);
+    if (score > bestScore) {
+      bestScore = score;
+      bestId = cardId;
+    }
+  }
+  return bestId;
+}
+
+/**
+ * Resolves a one-time "build a free card from the discard pile" trigger (Solomon's recruit
+ * effect, Halikarnassos' wonder-stage ability). Bots auto-pick the highest-value eligible
+ * card since they have no UI; humans must supply a validated `discardPickId` since this is
+ * meant to be the player's own choice.
+ */
+export function resolveDiscardPileBuild(state: GameState, playerId: string, discardPickId: string | undefined, sourceLabel: string): void {
+  const player = state.players[playerId]!;
+  const eligible = new Set(state.discardPile.filter((id) => !player.builtCardIds.includes(id)));
+  if (eligible.size === 0) return;
+
+  const cardId = player.isBot ? pickBestDiscardCard(state, playerId) : discardPickId;
+  if (cardId === null || cardId === undefined || !eligible.has(cardId)) {
+    if (player.isBot) return;
+    throw new Error("Choose a card from the discard pile to build for free");
+  }
+
+  const idx = state.discardPile.indexOf(cardId);
+  state.discardPile.splice(idx, 1);
+  player.builtCardIds.push(cardId);
+  applyImmediateEffects(state, playerId, getCard(cardId).effects);
+  state.log.push({
+    round: state.round,
+    age: state.age,
+    message: `${player.name} builds ${getCard(cardId).name} for free from the discard pile (${sourceLabel}).`,
+  });
 }
 
 /**
@@ -112,6 +169,9 @@ export function applyAction(state: GameState, playerId: string, action: RoundAct
     state.discardPile.push(action.cardId);
     const extraTurn = applyImmediateEffects(state, playerId, stage.effects, deferredOpponentEffects);
     state.log.push({ round: state.round, age: state.age, message: `${player.name} builds a wonder stage (${wonderSide.wonderName}, stage ${player.wonderStagesBuilt}).` });
+    if (stage.effects.some((e) => e.kind === "buildFromDiscardPile")) {
+      resolveDiscardPileBuild(state, playerId, action.discardPickId, wonderSide.wonderName);
+    }
     return extraTurn;
   }
 

@@ -860,3 +860,72 @@ table.score-table th {
   font-weight: 700;
   font-size: 14px;
 }
+
+.discard-picker-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+.discard-picker {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 640px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.discard-picker h3 {
+  margin: 0 0 6px;
+}
+.discard-picker-hint {
+  color: var(--text-dim);
+  font-size: 13px;
+  margin: 0 0 14px;
+}
+.discard-picker-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.discard-picker-card {
+  min-width: 150px;
+  max-width: 150px;
+  border-radius: 10px;
+  padding: 10px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: transform 0.1s ease;
+}
+.discard-picker-card:hover:not(:disabled) {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+}
+.discard-picker-card:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.discard-picker-card .card-name {
+  font-weight: 700;
+  font-size: 13px;
+}
+.discard-picker-card .card-cost {
+  font-size: 12px;
+  opacity: 0.9;
+}
+.discard-picker-card .card-effect {
+  font-size: 11px;
+  line-height: 1.3;
+}

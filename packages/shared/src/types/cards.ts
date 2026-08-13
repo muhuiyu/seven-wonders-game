@@ -34,7 +34,8 @@ export type CardEffect =
   | { kind: "copyGuild" } // Strategists-style "copy one neighbor guild" (Diplomats Guild variant, unused in base but supported)
   | { kind: "freeBuildPerAge" } // wonder ability: once per age, build one card for free
   | { kind: "playSeventhCard" } // wonder ability: build the leftover card at end of age for free
-  | { kind: "extraTurn" } // wonder ability (Halikarnassos-style): build another card immediately
+  | { kind: "extraTurn" } // wonder ability (Babylon-style): build another card immediately
+  | { kind: "buildFromDiscardPile" } // wonder ability (Halikarnassos): on completing this stage, build a free card of your choice from the discard pile
   // --- Cities expansion ---
   | { kind: "diplomacyToken" } // grants a token that skips the player's next military conflict entirely
   | { kind: "opponentsPayOrDebt"; amount: number } // every other player pays `amount` coins or takes Debt (-1 VP per unpaid coin)

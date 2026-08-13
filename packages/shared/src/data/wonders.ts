@@ -76,15 +76,17 @@ export const WONDER_SIDES: WonderSide[] = [
     { cost: [{ resources: { wood: 3, stone: 3, ore: 2 } }], effects: [{ kind: "vp", amount: 7 }] },
   ]),
 
-  // --- Halikarnassos (Halicarnassus) — starting resource: loom ---
+  // --- Halikarnassos (Halicarnassus) — starting resource: loom. Each stage's ability is to
+  // immediately build a free card of choice from the shared discard pile (not a per-age free
+  // build — that's Olympia's ability). ---
   side("halikarnassos", "The Mausoleum of Halikarnassos", "A", "loom", [
-    { cost: [{ resources: { clay: 2 } }], effects: [{ kind: "freeBuildPerAge" }] },
+    { cost: [{ resources: { clay: 2 } }], effects: [{ kind: "buildFromDiscardPile" }] },
     { cost: [{ resources: { wood: 3 } }], effects: [{ kind: "vp", amount: 5 }] },
     { cost: [{ resources: { glass: 2, loom: 1 } }], effects: [{ kind: "vp", amount: 7 }] },
   ]),
   side("halikarnassos", "The Mausoleum of Halikarnassos", "B", "loom", [
     { cost: [{ resources: { clay: 2 } }], effects: [{ kind: "coins", amount: 6 }] },
-    { cost: [{ resources: { wood: 2, glass: 1 } }], effects: [{ kind: "freeBuildPerAge" }] },
+    { cost: [{ resources: { wood: 2, glass: 1 } }], effects: [{ kind: "buildFromDiscardPile" }] },
     { cost: [{ resources: { ore: 3, loom: 1 } }], effects: [{ kind: "vp", amount: 5 }] },
     { cost: [{ resources: { clay: 3, papyrus: 2 } }], effects: [{ kind: "vp", amount: 7 }] },
   ]),
