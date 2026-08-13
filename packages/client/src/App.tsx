@@ -71,6 +71,7 @@ export default function App() {
     return (
       <div className="app">
         <SetupScreen onStart={handleStart} submitting={submitting} error={error} />
+        <Footer />
       </div>
     );
   }
@@ -79,6 +80,7 @@ export default function App() {
     return (
       <div className="app">
         <EndGameScreen state={state} onPlayAgain={handlePlayAgain} />
+        <Footer />
       </div>
     );
   }
@@ -86,6 +88,18 @@ export default function App() {
   return (
     <div className="app">
       <GameScreen state={state} onSubmit={handleSubmit} submitting={submitting} error={error} banner={banner} />
+      <Footer />
     </div>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="app-footer">
+      Created by Grace Mu-Hui Yu ·{" "}
+      <a href="https://gracemy.com" target="_blank" rel="noopener noreferrer">
+        gracemy.com
+      </a>
+    </footer>
   );
 }
