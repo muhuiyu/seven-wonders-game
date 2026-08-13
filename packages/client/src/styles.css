@@ -414,6 +414,7 @@ button {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  max-width: 308px; /* exactly 2 leader-tile columns (150px each), so the portal shrinks to fit instead of stretching to --wide's 420px cap */
 }
 
 .cost-option {
