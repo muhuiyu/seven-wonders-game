@@ -472,8 +472,8 @@ button {
 }
 .card-tile:hover { transform: translateY(-3px); }
 .card-tile.selected { border-color: var(--accent); }
-.card-tile.disabled { opacity: 0.45; cursor: not-allowed; }
-.card-tile.unaffordable:not(.disabled) { opacity: 0.7; }
+.card-tile.already-built-tile { opacity: 0.45; }
+.card-tile.unaffordable:not(.already-built-tile) { opacity: 0.7; }
 .card-tile .card-name { font-weight: 700; font-size: 13px; }
 .card-tile .card-cost { font-size: 12px; opacity: 0.9; }
 .card-tile .card-effect { font-size: 11px; line-height: 1.3; }

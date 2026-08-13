@@ -15,19 +15,17 @@ interface Props {
 
 export function CardTile({ view, selected, onSelect }: Props) {
   const card = cardById(view.cardId);
-  // Unaffordable cards stay selectable (not "disabled") because discarding for 3 coins is
-  // always a legal action regardless of build/wonder-stage cost — only an already-built card
-  // has no legal action left.
-  const disabled = view.alreadyBuilt;
-  const unaffordable = !view.buildAffordable && !view.wonderStageAffordable;
+  // No hand card is ever hard-disabled: discarding for 3 coins (and, for already-built
+  // duplicates, funding a wonder stage) is always legal regardless of buildability, so every
+  // card must stay selectable. These classes only dim the tile to hint that Build is unavailable.
+  const unaffordable = !view.alreadyBuilt && !view.buildAffordable && !view.wonderStageAffordable;
   const hasChains = chainParents(card).length > 0 || chainChildren(card).length > 0;
 
   const button = (
     <button
-      className={`card-tile${selected ? " selected" : ""}${disabled ? " disabled" : ""}${unaffordable ? " unaffordable" : ""}`}
+      className={`card-tile${selected ? " selected" : ""}${view.alreadyBuilt ? " already-built-tile" : ""}${unaffordable ? " unaffordable" : ""}`}
       style={{ background: COLOR_VAR[card.color] }}
       onClick={onSelect}
-      disabled={disabled}
     >
       <div className="card-name">{card.name}</div>
       <div className="card-cost">
