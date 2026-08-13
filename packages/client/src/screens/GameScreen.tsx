@@ -47,19 +47,25 @@ export function GameScreen({ state, onSubmit, submitting, error, banner }: Props
           {state.you.debtVp < 0 && <span className="badge badge-debt">Debt {state.you.debtVp} VP</span>}
           {state.expansions.leaders && state.you.leaderHandView.length > 0 && (
             <HoverTooltip
-              content={state.you.leaderHandView.map((view, i) => {
-                const leader = leaderById(view.cardId);
-                return (
-                  <div key={view.cardId + i} style={{ marginBottom: i < state.you.leaderHandView.length - 1 ? 6 : 0 }}>
-                    <div className="card-tooltip-name">{leader.name}</div>
-                    {leader.effects.length > 0 && (
-                      <div className="card-tooltip-effect">
-                        <CardEffectsView card={leader} />
+              wide
+              content={
+                <div className="leader-tooltip-cards">
+                  {state.you.leaderHandView.map((view, i) => {
+                    const leader = leaderById(view.cardId);
+                    return (
+                      <div key={view.cardId + i} className="leader-tile" style={{ cursor: "default" }}>
+                        <div className="leader-name">{leader.name}</div>
+                        <div className="leader-cost">🪙{leader.coinCost}</div>
+                        {leader.effects.length > 0 && (
+                          <div className="leader-effect">
+                            <CardEffectsView card={leader} />
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                );
-              })}
+                    );
+                  })}
+                </div>
+              }
             >
               <span className="badge badge-leaders-unplayed">🎭 Leaders not played x{state.you.leaderHandView.length}</span>
             </HoverTooltip>

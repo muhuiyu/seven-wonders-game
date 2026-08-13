@@ -1,4 +1,4 @@
-import type { GameStateView } from "@sw/shared";
+import { CARD_COLORS, type GameStateView } from "@sw/shared";
 import { COLOR_VAR } from "../lib/colors";
 import { CardEffectsView, CostView, ResourceIcon } from "./CardEffects";
 import { cardById, leaderById, wonderSideOf } from "../lib/format";
@@ -43,21 +43,26 @@ export function SelfPanel({ you }: Props) {
         <div className="title" style={{ fontWeight: 700, marginBottom: 8 }}>
           Built cards ({you.builtCardIds.length})
         </div>
-        <div className="built-cards">
+        <div className="built-cards-columns">
           {you.builtCardIds.length === 0 && <span style={{ color: "var(--text-dim)", fontSize: 13 }}>Nothing built yet.</span>}
-          {you.builtCardIds.map((id, i) => {
-            const card = cardById(id);
+          {CARD_COLORS.map((color) => {
+            const ids = you.builtCardIds.filter((id) => cardById(id).color === color);
+            if (ids.length === 0) return null;
             return (
-              <div key={id + i} className="built-card" style={{ background: COLOR_VAR[card.color] }}>
-                <div className="card-name">{card.name}</div>
-                <div className="card-cost">
-                  <CostView cost={card.cost} />
-                </div>
-                {card.effects.length > 0 && (
-                  <div className="card-effect">
-                    <CardEffectsView card={card} />
-                  </div>
-                )}
+              <div key={color} className="built-cards-column">
+                {ids.map((id, i) => {
+                  const card = cardById(id);
+                  return (
+                    <div key={id + i} className="built-card" style={{ background: COLOR_VAR[card.color] }}>
+                      <div className="card-name">{card.name}</div>
+                      {card.effects.length > 0 && (
+                        <div className="card-effect">
+                          <CardEffectsView card={card} />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             );
           })}

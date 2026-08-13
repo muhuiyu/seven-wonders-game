@@ -410,6 +410,11 @@ button {
 .card-tooltip-portal--wide {
   max-width: 420px;
 }
+.leader-tooltip-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 
 .cost-option {
   display: inline-flex;
@@ -560,9 +565,15 @@ button {
   background: rgba(90, 178, 122, 0.12);
 }
 
-.built-cards {
+.built-cards-columns {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px;
+}
+.built-cards-column {
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 .built-card {
@@ -578,10 +589,6 @@ button {
 .built-card .card-name {
   font-weight: 700;
   font-size: 13px;
-}
-.built-card .card-cost {
-  font-size: 12px;
-  opacity: 0.9;
 }
 .built-card .card-effect {
   font-size: 11px;
