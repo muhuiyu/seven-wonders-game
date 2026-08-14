@@ -24,7 +24,6 @@ export interface PlayerState {
   coins: number;
   militaryTokens: MilitaryToken[];
   hand: string[];
-  usedFreeBuildThisAge: boolean; // for wonder abilities granting 1 free build per age
   chosenScienceSymbols: ScienceSymbol[]; // symbols granted by "scienceChoice" effects, resolved at build time
   /** Leaders expansion. */
   leaderDraftPool: string[]; // cards currently circulating to this player during the pre-game draft (transient)

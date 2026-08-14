@@ -81,10 +81,14 @@ export function describeEffect(effect: CardEffect): string {
       return `Trade ${effect.resources.map((r) => RESOURCE_ICON[r]).join("")} from ${effect.sides.join("/")} neighbor for ${effect.unitCost} 🪙`;
     case "copyGuild":
       return `Copy a neighboring Guild card`;
-    case "freeBuildPerAge":
-      return `Once per Age: build a card for free`;
+    case "freeBuildFirstOfEachColor":
+      return `Build the first card of each color in your city for free`;
+    case "freeBuildFirstCardOfAge":
+      return `The first card you build each Age is free`;
+    case "freeBuildLastCardOfAge":
+      return `The last card you build each Age is free`;
     case "playSeventhCard":
-      return `Build your last card for free at the end of each Age`;
+      return `Play your last Age card as a bonus turn instead of discarding it`;
     case "extraTurn":
       return `Take another turn immediately`;
     case "buildFromDiscardPile":

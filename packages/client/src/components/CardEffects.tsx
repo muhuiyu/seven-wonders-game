@@ -159,10 +159,14 @@ export function EffectView({ effect }: { effect: CardEffect }) {
           Copy a neighboring <ColorTag color="purple" /> card
         </>
       );
-    case "freeBuildPerAge":
-      return <>Once per Age: build a card for free</>;
+    case "freeBuildFirstOfEachColor":
+      return <>Build the first card of each color in your city for free</>;
+    case "freeBuildFirstCardOfAge":
+      return <>The first card you build each Age is free</>;
+    case "freeBuildLastCardOfAge":
+      return <>The last card you build each Age is free</>;
     case "playSeventhCard":
-      return <>Build your last card for free at the end of each Age</>;
+      return <>Play your last Age card as a bonus turn instead of discarding it</>;
     case "extraTurn":
       return <>Take another turn immediately</>;
     case "buildFromDiscardPile":

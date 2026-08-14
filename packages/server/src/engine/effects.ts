@@ -11,8 +11,8 @@ export interface PendingOpponentEffect {
 /**
  * Applies the immediate (build-time) portion of a card/wonder-stage's effects: coins gained,
  * science-choice resolution. Passive effects (resource, shields, science, vp, tradeDiscount,
- * freeBuildPerAge) don't mutate state here — they're derived on demand from builtCardIds /
- * wonderStagesBuilt wherever they're needed (payment, military, scoring, bot heuristics).
+ * the Olympia freeBuild* kinds) don't mutate state here — they're derived on demand from
+ * builtCardIds / wonderStagesBuilt wherever they're needed (payment, military, scoring, bot heuristics).
  * End-game-only effects (vpPerCard, vpPerWonderStage, vpPerDefeatToken, vpPerColorSet, the VP
  * half of vpAndCoinsPerCard) are resolved later in scoring.ts from final board state.
  *

@@ -13,7 +13,6 @@ export function makePlayer(id: string, overrides: Partial<PlayerState> = {}): Pl
     coins: 3,
     militaryTokens: [],
     hand: [],
-    usedFreeBuildThisAge: false,
     chosenScienceSymbols: [],
     leaderDraftPool: [],
     leaderHand: [],

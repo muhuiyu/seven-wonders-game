@@ -32,8 +32,10 @@ export type CardEffect =
   | { kind: "vpPerColorSet"; colors: CardColor[]; scope: "self"; perCard: number } // Shipowners Guild style
   | { kind: "tradeDiscount"; resources: ResourceType[]; sides: NeighborSide[]; unitCost: number }
   | { kind: "copyGuild" } // Strategists-style "copy one neighbor guild" (Diplomats Guild variant, unused in base but supported)
-  | { kind: "freeBuildPerAge" } // wonder ability: once per age, build one card for free
-  | { kind: "playSeventhCard" } // wonder ability: build the leftover card at end of age for free
+  | { kind: "freeBuildFirstOfEachColor" } // wonder ability (Olympia Day): build the first card of each color not yet in your city for free
+  | { kind: "freeBuildFirstCardOfAge" } // wonder ability (Olympia Night): the first card you build each Age is free
+  | { kind: "freeBuildLastCardOfAge" } // wonder ability (Olympia Night): the last card you build each Age is free
+  | { kind: "playSeventhCard" } // wonder ability (Babylon Night): play the leftover card at the end of each Age as a bonus turn instead of discarding it
   | { kind: "extraTurn" } // wonder ability (Babylon-style): build another card immediately
   | { kind: "buildFromDiscardPile" } // wonder ability (Halikarnassos): on completing this stage, build a free card of your choice from the discard pile
   // --- Cities expansion ---

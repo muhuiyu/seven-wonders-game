@@ -10,14 +10,17 @@ function side(
   return { wonderId, wonderName, side: s, startingResource, stages };
 }
 
+// Wonder board data reflects the 7 Wonders 2nd Edition (2020 rebalance) — stage costs,
+// starting resources, and several stage effects differ from the original 2010 edition.
 export const WONDER_SIDES: WonderSide[] = [
   // --- Gizah (Egypt) — starting resource: stone ---
   side("gizah", "The Pyramids of Gizah", "A", "stone", [
-    { cost: [{ resources: { stone: 2 } }], effects: [{ kind: "vp", amount: 3 }] },
-    { cost: [{ resources: { wood: 3 } }], effects: [{ kind: "vp", amount: 5 }] },
+    { cost: [{ resources: { wood: 2 } }], effects: [{ kind: "vp", amount: 3 }] },
+    { cost: [{ resources: { clay: 2, loom: 1 } }], effects: [{ kind: "vp", amount: 5 }] },
     { cost: [{ resources: { stone: 4 } }], effects: [{ kind: "vp", amount: 7 }] },
   ]),
-  // Gizah B has no special ability, just VP on every stage (3+5+5+7 = 20 total).
+  // Gizah B has no special ability, just VP on every stage (3+5+5+7 = 20 total). The only
+  // wonder side with 4 stages.
   side("gizah", "The Pyramids of Gizah", "B", "stone", [
     { cost: [{ resources: { wood: 2 } }], effects: [{ kind: "vp", amount: 3 }] },
     { cost: [{ resources: { stone: 3 } }], effects: [{ kind: "vp", amount: 5 }] },
@@ -25,7 +28,7 @@ export const WONDER_SIDES: WonderSide[] = [
     { cost: [{ resources: { stone: 4, papyrus: 1 } }], effects: [{ kind: "vp", amount: 7 }] },
   ]),
 
-  // --- Rhodos (Rhodes) — starting resource: ore ---
+  // --- Rhodos (Rhodes) — starting resource: ore. Unchanged from the original edition. ---
   side("rhodos", "The Colossus of Rhodos", "A", "ore", [
     { cost: [{ resources: { wood: 2 } }], effects: [{ kind: "vp", amount: 3 }] },
     { cost: [{ resources: { clay: 3 } }], effects: [{ kind: "shields", count: 2 }] },
@@ -40,69 +43,70 @@ export const WONDER_SIDES: WonderSide[] = [
   // --- Ephesos (Ephesus) — starting resource: papyrus. Unlike most wonders, both sides
   // have only 3 stages (no 4-stage B side). ---
   side("ephesos", "The Temple of Artemis", "A", "papyrus", [
-    { cost: [{ resources: { stone: 2 } }], effects: [{ kind: "vp", amount: 3 }] },
+    { cost: [{ resources: { clay: 2 } }], effects: [{ kind: "vp", amount: 3 }] },
     { cost: [{ resources: { wood: 2 } }], effects: [{ kind: "coins", amount: 9 }] },
-    { cost: [{ resources: { papyrus: 2 } }], effects: [{ kind: "vp", amount: 7 }] },
+    { cost: [{ resources: { ore: 2, glass: 1 } }], effects: [{ kind: "vp", amount: 7 }] },
   ]),
   side("ephesos", "The Temple of Artemis", "B", "papyrus", [
     { cost: [{ resources: { stone: 2 } }], effects: [{ kind: "coins", amount: 4 }, { kind: "vp", amount: 2 }] },
     { cost: [{ resources: { wood: 2 } }], effects: [{ kind: "coins", amount: 4 }, { kind: "vp", amount: 3 }] },
-    { cost: [{ resources: { glass: 1, loom: 1, papyrus: 1 } }], effects: [{ kind: "coins", amount: 4 }, { kind: "vp", amount: 5 }] },
+    { cost: [{ resources: { ore: 2, loom: 1 } }], effects: [{ kind: "coins", amount: 4 }, { kind: "vp", amount: 5 }] },
   ]),
 
-  // --- Babylon — starting resource: clay ---
-  side("babylon", "The Hanging Gardens of Babylon", "A", "clay", [
+  // --- Babylon — starting resource: wood ---
+  side("babylon", "The Hanging Gardens of Babylon", "A", "wood", [
     { cost: [{ resources: { clay: 2 } }], effects: [{ kind: "vp", amount: 3 }] },
-    { cost: [{ resources: { wood: 3 } }], effects: [{ kind: "scienceChoice" }] },
-    { cost: [{ resources: { clay: 4 } }], effects: [{ kind: "vp", amount: 7 }] },
+    { cost: [{ resources: { ore: 2, loom: 1 } }], effects: [{ kind: "scienceChoice" }] },
+    { cost: [{ resources: { wood: 4 } }], effects: [{ kind: "vp", amount: 7 }] },
   ]),
-  // Babylon B has only 3 stages (not the usual 4).
-  side("babylon", "The Hanging Gardens of Babylon", "B", "clay", [
-    { cost: [{ resources: { loom: 2 } }], effects: [{ kind: "vp", amount: 3 }] },
-    { cost: [{ resources: { wood: 2, glass: 1 } }], effects: [{ kind: "extraTurn" }] },
-    { cost: [{ resources: { clay: 3, papyrus: 1 } }], effects: [{ kind: "scienceChoice" }] },
+  // Babylon B has only 2 stages (not the usual 4), neither of which scores VP directly:
+  // stage 1 lets it play its otherwise-discarded leftover card at the end of each Age as a
+  // paid bonus turn, stage 2 grants a science-symbol choice.
+  side("babylon", "The Hanging Gardens of Babylon", "B", "wood", [
+    { cost: [{ resources: { stone: 2 } }], effects: [{ kind: "playSeventhCard" }] },
+    { cost: [{ resources: { clay: 3, glass: 1 } }], effects: [{ kind: "scienceChoice" }] },
   ]),
 
-  // --- Olympia — starting resource: wood ---
-  side("olympia", "The Statue of Zeus in Olympia", "A", "wood", [
-    { cost: [{ resources: { wood: 2 } }], effects: [{ kind: "vp", amount: 3 }] },
-    { cost: [{ resources: { stone: 2 } }], effects: [{ kind: "freeBuildPerAge" }] },
-    { cost: [{ resources: { ore: 2 } }], effects: [{ kind: "vp", amount: 7 }] },
+  // --- Olympia — starting resource: clay ---
+  side("olympia", "The Statue of Zeus in Olympia", "A", "clay", [
+    { cost: [{ resources: { stone: 2 } }], effects: [{ kind: "vp", amount: 3 }] },
+    { cost: [{ resources: { wood: 2 } }], effects: [{ kind: "freeBuildFirstOfEachColor" }] },
+    { cost: [{ resources: { clay: 3 } }], effects: [{ kind: "vp", amount: 7 }] },
   ]),
-  // Olympia B has only 3 stages (not the usual 4): a trading discount (equivalent to both
-  // Trading Posts), a VP stage, then copying a neighboring Guild card at game end.
-  side("olympia", "The Statue of Zeus in Olympia", "B", "wood", [
-    { cost: [{ resources: { wood: 2 } }], effects: [{ kind: "tradeDiscount", resources: ["wood", "stone", "ore", "clay"], sides: ["left", "right"], unitCost: 1 }] },
-    { cost: [{ resources: { stone: 2 } }], effects: [{ kind: "vp", amount: 5 }] },
-    { cost: [{ resources: { ore: 2, loom: 1 } }], effects: [{ kind: "copyGuild" }] },
+  // Olympia B: stage 1 makes the first card built each Age free, stage 2 makes the last
+  // card built each Age free (so once both are built, up to 2 free builds per Age).
+  side("olympia", "The Statue of Zeus in Olympia", "B", "clay", [
+    { cost: [{ resources: { ore: 2 } }], effects: [{ kind: "freeBuildFirstCardOfAge" }, { kind: "vp", amount: 2 }] },
+    { cost: [{ resources: { clay: 3 } }], effects: [{ kind: "freeBuildLastCardOfAge" }, { kind: "vp", amount: 3 }] },
+    { cost: [{ resources: { glass: 1, papyrus: 1, loom: 1 } }], effects: [{ kind: "vp", amount: 5 }] },
   ]),
 
   // --- Halikarnassos (Halicarnassus) — starting resource: loom. Each stage's ability is to
   // immediately build a free card of choice from the shared discard pile (not a per-age free
   // build — that's Olympia's ability). ---
   side("halikarnassos", "The Mausoleum of Halikarnassos", "A", "loom", [
-    { cost: [{ resources: { clay: 2 } }], effects: [{ kind: "vp", amount: 3 }] },
-    { cost: [{ resources: { ore: 3 } }], effects: [{ kind: "buildFromDiscardPile" }] },
-    { cost: [{ resources: { loom: 2 } }], effects: [{ kind: "vp", amount: 7 }] },
+    { cost: [{ resources: { ore: 2 } }], effects: [{ kind: "vp", amount: 3 }] },
+    { cost: [{ resources: { glass: 1, papyrus: 1 } }], effects: [{ kind: "buildFromDiscardPile" }] },
+    { cost: [{ resources: { stone: 3 } }], effects: [{ kind: "vp", amount: 7 }] },
   ]),
   // Halikarnassos B has only 3 stages (not the usual 4), and every stage grants buildFromDiscardPile.
   side("halikarnassos", "The Mausoleum of Halikarnassos", "B", "loom", [
-    { cost: [{ resources: { ore: 2 } }], effects: [{ kind: "vp", amount: 2 }, { kind: "buildFromDiscardPile" }] },
-    { cost: [{ resources: { clay: 3 } }], effects: [{ kind: "vp", amount: 1 }, { kind: "buildFromDiscardPile" }] },
-    { cost: [{ resources: { glass: 1, loom: 1, papyrus: 1 } }], effects: [{ kind: "buildFromDiscardPile" }] },
+    { cost: [{ resources: { clay: 2 } }], effects: [{ kind: "vp", amount: 2 }, { kind: "buildFromDiscardPile" }] },
+    { cost: [{ resources: { glass: 1, papyrus: 1 } }], effects: [{ kind: "vp", amount: 1 }, { kind: "buildFromDiscardPile" }] },
+    { cost: [{ resources: { wood: 3 } }], effects: [{ kind: "buildFromDiscardPile" }] },
   ]),
 
   // --- Alexandria — starting resource: glass ---
   side("alexandria", "The Lighthouse of Alexandria", "A", "glass", [
     { cost: [{ resources: { stone: 2 } }], effects: [{ kind: "vp", amount: 3 }] },
     { cost: [{ resources: { ore: 2 } }], effects: [{ kind: "resource", production: { options: ["wood", "stone", "ore", "clay"], qty: 1 } }] },
-    { cost: [{ resources: { glass: 2 } }], effects: [{ kind: "vp", amount: 7 }] },
+    { cost: [{ resources: { papyrus: 1, loom: 1 } }], effects: [{ kind: "vp", amount: 7 }] },
   ]),
   // Alexandria B has only 3 stages (not the usual 4).
   side("alexandria", "The Lighthouse of Alexandria", "B", "glass", [
     { cost: [{ resources: { clay: 2 } }], effects: [{ kind: "resource", production: { options: ["wood", "stone", "ore", "clay"], qty: 1 } }] },
-    { cost: [{ resources: { wood: 2 } }], effects: [{ kind: "resource", production: { options: ["loom", "glass", "papyrus"], qty: 1 } }] },
-    { cost: [{ resources: { stone: 3 } }], effects: [{ kind: "vp", amount: 7 }] },
+    { cost: [{ resources: { ore: 3 } }], effects: [{ kind: "resource", production: { options: ["loom", "glass", "papyrus"], qty: 1 } }] },
+    { cost: [{ resources: { wood: 4 } }], effects: [{ kind: "vp", amount: 7 }] },
   ]),
 
   // --- Roma (Leaders expansion) — no starting resource. Its bonus is instead a Leader

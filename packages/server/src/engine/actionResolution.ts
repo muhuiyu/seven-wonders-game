@@ -46,44 +46,48 @@ export function getAffordability(state: GameState, playerId: string, cost: Cost)
   return computeCheapestPaymentForCost(cost, ownSlots, leftSlots, rightSlots, tradeUnitCost, player.coins, bankPurchase?.kind === "bankPurchase" ? bankPurchase.unitCost : undefined);
 }
 
-export function hasUnusedFreeBuild(player: PlayerState): boolean {
-  if (player.usedFreeBuildThisAge) return false;
-  const wonderSide = getWonderSide(player.wonderId, player.wonderSide);
-  for (let i = 0; i < player.wonderStagesBuilt; i++) {
-    const stage = wonderSide.stages[i];
-    if (stage?.effects.some((e) => e.kind === "freeBuildPerAge")) return true;
-  }
-  return false;
-}
-
 function hasFreeBuildForColor(player: PlayerState, color: CardColor): boolean {
   return getActiveEffectSources(player).some((e) => e.kind === "freeBuildForColor" && e.color === color);
+}
+
+/** Olympia Day stage 2: the first card of each color not yet in this player's city is free. */
+function hasFreeBuildFirstOfColor(player: PlayerState, color: CardColor): boolean {
+  if (!getActiveEffectSources(player).some((e) => e.kind === "freeBuildFirstOfEachColor")) return false;
+  return !player.builtCardIds.some((id) => getCard(id).color === color);
+}
+
+/** Olympia Night: stage 1 makes the first card built each Age free, stage 2 the last card built each Age. */
+function hasFreeBuildByAgeTiming(state: GameState, player: PlayerState): boolean {
+  const roundsPerAge = state.expansions.cities ? 7 : 6;
+  const effects = getActiveEffectSources(player);
+  if (state.round === 1 && effects.some((e) => e.kind === "freeBuildFirstCardOfAge")) return true;
+  if (state.round === roundsPerAge && effects.some((e) => e.kind === "freeBuildLastCardOfAge")) return true;
+  return false;
 }
 
 export interface BuildCheck {
   legal: boolean;
   reason?: string;
   free: boolean;
-  usesFreeBuild: boolean;
   payment?: AffordabilityResult;
 }
 
 export function canBuildCard(state: GameState, playerId: string, cardId: string): BuildCheck {
   const player = state.players[playerId]!;
-  if (!player.hand.includes(cardId)) return { legal: false, reason: "not in hand", free: false, usesFreeBuild: false };
+  if (!player.hand.includes(cardId)) return { legal: false, reason: "not in hand", free: false };
   const card = getCard(cardId);
-  if (player.builtCardIds.includes(cardId)) return { legal: false, reason: "already built", free: false, usesFreeBuild: false };
+  if (player.builtCardIds.includes(cardId)) return { legal: false, reason: "already built", free: false };
 
-  if (isFreeViaChain(card, player)) return { legal: true, free: true, usesFreeBuild: false };
-  if (hasFreeBuildForColor(player, card.color)) return { legal: true, free: true, usesFreeBuild: false };
+  if (isFreeViaChain(card, player)) return { legal: true, free: true };
+  if (hasFreeBuildForColor(player, card.color)) return { legal: true, free: true };
+  if (hasFreeBuildFirstOfColor(player, card.color)) return { legal: true, free: true };
+  if (hasFreeBuildByAgeTiming(state, player)) return { legal: true, free: true };
 
   const effectiveCost = getEffectiveCost(player, card.cost, card.color);
   const payment = getAffordability(state, playerId, effectiveCost);
-  if (payment.affordable) return { legal: true, free: false, usesFreeBuild: false, payment };
+  if (payment.affordable) return { legal: true, free: false, payment };
 
-  if (hasUnusedFreeBuild(player)) return { legal: true, free: true, usesFreeBuild: true };
-
-  return { legal: false, reason: "cannot afford", free: false, usesFreeBuild: false, payment };
+  return { legal: false, reason: "cannot afford", free: false, payment };
 }
 
 export interface WonderStageCheck {

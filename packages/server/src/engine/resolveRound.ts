@@ -6,6 +6,7 @@ import { chooseBotAction, chooseBotLeaderDraftAction, chooseBotLeaderRecruitActi
 import { getNeighborIds } from "./seating.js";
 import { resolveMilitary } from "./military.js";
 import { computeFinalScore } from "./scoring.js";
+import { getActiveEffectSources } from "./effectSources.js";
 
 const HUMAN_ID = "human";
 
@@ -90,6 +91,19 @@ function resolveDraftingRound(prev: GameState, humanAction: RoundAction): GameSt
     return state;
   }
 
+  // Babylon Night stage 1 (playSeventhCard): before the leftover card is discarded, a
+  // qualifying player gets one more turn to build/sell it instead — resolved the same way
+  // as an extraTurn bonus turn (auto-decided, even for the human) since it's not a choice
+  // the player makes ahead of time.
+  for (const playerId of state.seats) {
+    const player = state.players[playerId]!;
+    if (player.hand.length === 1 && getActiveEffectSources(player).some((e) => e.kind === "playSeventhCard")) {
+      const bonusAction = chooseBotAction(state, playerId);
+      applyAction(state, playerId, bonusAction);
+      state.log.push({ round: state.round, age: state.age, message: `${player.name} plays their last Age card instead of discarding it (Hanging Gardens of Babylon).` });
+    }
+  }
+
   // End of age: discard any leftover 1-card hands, then resolve military.
   for (const playerId of state.seats) {
     const player = state.players[playerId]!;
@@ -97,7 +111,6 @@ function resolveDraftingRound(prev: GameState, humanAction: RoundAction): GameSt
       state.discardPile.push(...player.hand);
       player.hand = [];
     }
-    player.usedFreeBuildThisAge = false;
   }
   resolveMilitary(state, state.age);
 

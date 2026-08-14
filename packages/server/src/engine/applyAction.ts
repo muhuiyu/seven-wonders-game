@@ -138,9 +138,7 @@ export function applyAction(state: GameState, playerId: string, action: RoundAct
 
     removeFromHand(player.hand, action.cardId);
 
-    if (check.usesFreeBuild) {
-      player.usedFreeBuildThisAge = true;
-    } else if (!check.free && check.payment) {
+    if (!check.free && check.payment) {
       payAndCredit(state, playerId, check.payment.totalCoinCost, check.payment.purchases);
       applyNeighborPurchaseRebate(state, playerId, check.payment.purchases);
     }

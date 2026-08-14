@@ -69,7 +69,7 @@ describe("final scoring breakdown", () => {
     const human = makePlayer("human", {
       coins: 10, // treasury = floor(10/3) = 3
       builtCardIds: ["baths", "apothecary"], // baths: vp 3 (blue); apothecary: compass (science)
-      wonderStagesBuilt: 1, // gizah A stage 1: cost stone:2, vp 3
+      wonderStagesBuilt: 1, // gizah A stage 1: cost wood:2, vp 3
       militaryTokens: [{ age: 1, result: "win" }], // +1
     });
     const bot = makePlayer("bot", { wonderId: "rhodos", wonderSide: "A" });

@@ -105,7 +105,6 @@ export function createGame(opts: SetupOptions): GameState {
       coins: startingCoins,
       militaryTokens: [],
       hand,
-      usedFreeBuildThisAge: false,
       chosenScienceSymbols: [],
       leaderDraftPool: leaderDraftHands.get(playerId) ?? [],
       leaderHand: [],
