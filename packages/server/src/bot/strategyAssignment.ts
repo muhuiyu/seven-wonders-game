@@ -6,7 +6,7 @@ const WONDER_STRATEGY_AFFINITY: Record<string, BotStrategyId> = {
   rhodos: "military", // only wonder with a reliable shields stage
   ephesos: "commerce", // coin-heavy stages, no shields
   babylon: "science", // scienceChoice on every stage
-  olympia: "balanced", // resource engine that fuels any strategy equally well
+  olympia: "balanced", // trade discount + free build + guild-copy fuels any strategy equally well
   halikarnassos: "commerce", // free-build-from-discard engine
   alexandria: "commerce", // resource self-sufficiency
   roma: "civilian",
