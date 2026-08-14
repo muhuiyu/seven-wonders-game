@@ -10,7 +10,7 @@ import type {
   ScienceSymbol,
 } from "@sw/shared"
 import { COLOR_LABEL } from "../lib/format"
-import { DIPLOMACY_TOKEN_IMG, RESOURCE_IMG, SCIENCE_IMG, SHIELD_IMG } from "../lib/icons"
+import { DIPLOMACY_TOKEN_IMG, RESOURCE_IMG, SCIENCE_IMG, SHIELD_IMG, victoryPointIcon } from "../lib/icons"
 
 export function ResourceIcon({ type }: { type: ResourceType }) {
   return <img className="icon-symbol" src={RESOURCE_IMG[type]} alt={type} title={type} />
@@ -26,6 +26,17 @@ function ShieldIcon() {
 
 function DiplomacyTokenIcon() {
   return <img className="icon-symbol" src={DIPLOMACY_TOKEN_IMG} alt="diplomacy token" title="diplomacy token" />
+}
+
+function VictoryPointIcon({ points }: { points: number }) {
+  return (
+    <img
+      className="icon-symbol"
+      src={victoryPointIcon(points)}
+      alt={`${points} victory points`}
+      title={`${points} victory points`}
+    />
+  )
 }
 
 /** A card-color category name (e.g. "Science Buildings", "Guilds"), highlighted in that
@@ -130,11 +141,12 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
     case "coins":
       return <>+{effect.amount} 🪙</>
     case "vp":
-      return <>+{effect.amount} 🏆 VP</>
+      return <VictoryPointIcon points={effect.amount} />
     case "vpPerCard":
       return (
         <>
-          +{effect.perCard} 🏆 per <ColorTag color={effect.color} /> card in {SCOPE_LABEL[effect.scope]}
+          <VictoryPointIcon points={effect.perCard} /> per <ColorTag color={effect.color} /> card in{" "}
+          {SCOPE_LABEL[effect.scope]}
         </>
       )
     case "coinsPerCard":
@@ -146,27 +158,27 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
     case "vpAndCoinsPerCard":
       return (
         <>
-          +{effect.coinsPer} 🪙 now, +{effect.vpPer} 🏆 per <ColorTag color={effect.color} /> card in{" "}
-          {SCOPE_LABEL[effect.scope]}
+          +{effect.coinsPer} 🪙 now, <VictoryPointIcon points={effect.vpPer} /> per <ColorTag color={effect.color} />{" "}
+          card in {SCOPE_LABEL[effect.scope]}
         </>
       )
     case "vpPerWonderStage":
       return (
         <>
-          +{effect.perStage} 🏆 per Wonder stage built in {SCOPE_LABEL[effect.scope]}
+          <VictoryPointIcon points={effect.perStage} /> per Wonder stage built in {SCOPE_LABEL[effect.scope]}
         </>
       )
     case "vpPerDefeatToken":
       return (
         <>
-          +{effect.perToken} 🏆 per defeat token in {SCOPE_LABEL[effect.scope]}
+          <VictoryPointIcon points={effect.perToken} /> per defeat token in {SCOPE_LABEL[effect.scope]}
         </>
       )
     case "vpPerColorSet":
       return (
         <>
-          +{effect.perCard} 🏆 per {joinSlash(effect.colors.map((c) => <ColorTag key={c} color={c} />))} card in your
-          city
+          <VictoryPointIcon points={effect.perCard} /> per{" "}
+          {joinSlash(effect.colors.map((c) => <ColorTag key={c} color={c} />))} card in your city
         </>
       )
     case "tradeDiscount":
@@ -233,7 +245,8 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
     case "vpPerMilitaryToken":
       return (
         <>
-          +{effect.perToken} 🏆 per military {effect.result} token in {SCOPE_LABEL[effect.scope]}
+          <VictoryPointIcon points={effect.perToken} /> per military {effect.result} token in{" "}
+          {SCOPE_LABEL[effect.scope]}
         </>
       )
     case "coinsPerMilitaryToken":
@@ -258,8 +271,8 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
     case "vpPerColorSetBonus":
       return (
         <>
-          +{effect.perSet} 🏆 per complete set of {joinSlash(effect.colors.map((c) => <ColorTag key={c} color={c} />))}{" "}
-          in your city
+          <VictoryPointIcon points={effect.perSet} /> per complete set of{" "}
+          {joinSlash(effect.colors.map((c) => <ColorTag key={c} color={c} />))} in your city
         </>
       )
     case "freeLeaderRecruitment":
@@ -291,15 +304,23 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
         </>
       )
     case "vpPerCoinsHeld":
-      return <>+1 🏆 per {effect.coinsPerVp} 🪙 held at game end</>
+      return (
+        <>
+          <VictoryPointIcon points={1} /> per {effect.coinsPerVp} 🪙 held at game end
+        </>
+      )
     case "vpPerRecruitedLeader":
       return (
         <>
-          +{effect.perLeader} 🏆 per recruited Leader in {SCOPE_LABEL[effect.scope]}
+          <VictoryPointIcon points={effect.perLeader} /> per recruited Leader in {SCOPE_LABEL[effect.scope]}
         </>
       )
     case "vpPerScienceSet":
-      return <>+{effect.perSet} 🏆 per complete science symbol set</>
+      return (
+        <>
+          <VictoryPointIcon points={effect.perSet} /> per complete science symbol set
+        </>
+      )
     case "copyNeighborLeader":
       return <>Gain the effects of one recruited Leader in a neighboring city</>
     default:
