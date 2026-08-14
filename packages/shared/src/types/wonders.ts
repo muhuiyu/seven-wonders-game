@@ -4,6 +4,8 @@ import type { ResourceType } from "./resources.js";
 export interface WonderStage {
   cost: Cost;
   effects: CardEffect[];
+  /** Manneken Pis Side A: this stage's cost/effects are copied from a neighbor's wonder stage instead of being fixed. */
+  mirrors?: { neighbor: "left" | "right"; stageIndex: number };
 }
 
 export interface WonderSide {
@@ -18,4 +20,6 @@ export interface WonderSide {
   requiresExpansion?: ExpansionId;
   /** When true, stages may be built in any order (currently only The Great Wall) instead of the usual strict left-to-right order. */
   anyOrder?: boolean;
+  /** Extra coins added to the normal starting total (3, or 6 with Leaders) — currently only Manneken Pis. */
+  startingCoins?: number;
 }

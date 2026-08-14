@@ -1,5 +1,5 @@
-import { getBuiltStageIndices, getCard, getWonderSide, type CardColor, type CardEffect, type GameState, type PlayerState, type ScoreBreakdown } from "@sw/shared";
-import { countByScope, countCardsOfColor, countDefeatTokensByScope, countMilitaryTokensByScope, countRecruitedLeadersByScope, countWonderStagesByScope } from "./colorCounts.js";
+import { getBuiltStageIndices, getCard, getEffectiveWonderStages, getWonderSide, type CardColor, type CardEffect, type GameState, type PlayerState, type ScoreBreakdown } from "@sw/shared";
+import { countByScope, countCardsOfColor, countDefeatTokensByScope, countMilitaryTokensByScope, countRecruitedLeadersByScope, countResourceProducerUnits, countWonderStagesByScope } from "./colorCounts.js";
 import { militaryVp } from "./military.js";
 import { getEffectiveScienceCounts, scoreScience } from "./science.js";
 import { getLeaderEffectSources } from "./effectSources.js";
@@ -30,6 +30,10 @@ function vpFromEffect(state: GameState, playerId: string, player: PlayerState, e
       const counts = getEffectiveScienceCounts(state, playerId);
       return Math.min(counts.cog, counts.compass, counts.tablet) * effect.perSet;
     }
+    case "vpPerResourceProducer":
+      return countResourceProducerUnits(player, effect.resource) * effect.perProducer;
+    case "vpPerNeighborCardOfMarkedColor":
+      return player.markedCardColor ? countByScope(state, playerId, player.markedCardColor, "bothNeighbors") * effect.perCard : 0;
     default:
       return 0;
   }
@@ -54,15 +58,15 @@ export function leaderVp(state: GameState, playerId: string): number {
   return total;
 }
 
-export function wonderVp(player: PlayerState): number {
+export function wonderVp(state: GameState, playerId: string): number {
+  const player = state.players[playerId]!;
   const wonderSide = getWonderSide(player.wonderId, player.wonderSide);
   let total = 0;
+  const stages = getEffectiveWonderStages(player, wonderSide);
   for (const i of getBuiltStageIndices(player, wonderSide)) {
-    const stage = wonderSide.stages[i];
+    const stage = stages[i];
     if (!stage) continue;
-    for (const effect of stage.effects) {
-      if (effect.kind === "vp") total += effect.amount;
-    }
+    for (const effect of stage.effects) total += vpFromEffect(state, playerId, player, effect);
   }
   return total;
 }
@@ -70,7 +74,7 @@ export function wonderVp(player: PlayerState): number {
 /** Non-military running estimate of a player's value, used by the bot heuristic to score candidate moves mid-game. */
 export function estimatePlayerValue(state: GameState, playerId: string): number {
   const player = state.players[playerId]!;
-  const wonder = wonderVp(player);
+  const wonder = wonderVp(state, playerId);
   const civil = sumVpForColor(state, playerId, "blue");
   const science = scoreScience(getEffectiveScienceCounts(state, playerId));
   const guild = sumVpForColor(state, playerId, "purple");
@@ -86,7 +90,7 @@ export function computeFinalScore(state: GameState): ScoreBreakdown[] {
     const player = state.players[playerId]!;
     const military = militaryVp(player);
     const treasury = Math.floor(player.coins / 3);
-    const wonder = wonderVp(player);
+    const wonder = wonderVp(state, playerId);
     const civil = sumVpForColor(state, playerId, "blue");
     const science = scoreScience(getEffectiveScienceCounts(state, playerId));
     const guild = sumVpForColor(state, playerId, "purple");

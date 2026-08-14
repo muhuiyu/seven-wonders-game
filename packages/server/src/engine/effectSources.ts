@@ -1,4 +1,4 @@
-import { getBuiltStageIndices, getCard, getLeaderCard, getWonderSide, type CardEffect, type PlayerState } from "@sw/shared";
+import { getBuiltStageIndices, getCard, getEffectiveWonderStages, getLeaderCard, getWonderSide, type CardEffect, type PlayerState } from "@sw/shared";
 
 /** Effects from this player's recruited Leaders (plus a Courtesan's-Guild-copied leader, if any). */
 export function getLeaderEffectSources(player: PlayerState): CardEffect[] {
@@ -22,8 +22,9 @@ export function getActiveEffectSources(player: PlayerState): CardEffect[] {
 
   const wonderSide = getWonderSide(player.wonderId, player.wonderSide);
   if (wonderSide.startingEffects) effects.push(...wonderSide.startingEffects);
+  const stages = getEffectiveWonderStages(player, wonderSide);
   for (const i of getBuiltStageIndices(player, wonderSide)) {
-    const stage = wonderSide.stages[i];
+    const stage = stages[i];
     if (stage) effects.push(...stage.effects);
   }
 

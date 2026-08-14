@@ -1,64 +1,86 @@
-import { useState } from "react";
-import type { GameStateView, RoundAction } from "@sw/shared";
-import { CardEffectsView, CostView } from "./CardEffects";
-import { DiscardPilePicker } from "./DiscardPilePicker";
-import { WonderStagePicker } from "./WonderStagePicker";
-import { leaderById, wonderSideOf } from "../lib/format";
+import { useState } from "react"
+import { getEffectiveWonderStages, type GameStateView, type RoundAction } from "@sw/shared"
+import { CardEffectsView, CoinIcon, CostView } from "./CardEffects"
+import { DiscardPilePicker } from "./DiscardPilePicker"
+import { WonderStagePicker } from "./WonderStagePicker"
+import { leaderById, wonderSideOf } from "../lib/format"
 
 interface Props {
-  you: GameStateView["you"];
-  discardPile: string[];
-  onSubmit: (action: RoundAction) => void;
-  submitting: boolean;
+  you: GameStateView["you"]
+  discardPile: string[]
+  onSubmit: (action: RoundAction) => void
+  submitting: boolean
 }
 
-type PendingPick = { type: "recruitLeader" | "buildWonderStageFromLeader"; cardId: string; title: string; stageIndex?: number };
+type PendingPick = {
+  type: "recruitLeader" | "buildWonderStageFromLeader"
+  cardId: string
+  title: string
+  stageIndex?: number
+  mirrorStageIndex?: number
+}
 
 export function LeaderRecruitPanel({ you, discardPile, onSubmit, submitting }: Props) {
-  const [pending, setPending] = useState<PendingPick | null>(null);
-  const [pendingStageLeaderId, setPendingStageLeaderId] = useState<string | null>(null);
-  const wonderSide = wonderSideOf(you.wonderId, you.wonderSide);
-  const nextStage = wonderSide.anyOrder ? undefined : wonderSide.stages[you.wonderStagesBuilt];
-  const stageBuildsFromDiscard = nextStage?.effects.some((e) => e.kind === "buildFromDiscardPile") ?? false;
-  const eligibleDiscardIds = Array.from(new Set(discardPile.filter((id) => !you.builtCardIds.includes(id))));
+  const [pending, setPending] = useState<PendingPick | null>(null)
+  const [pendingStageLeaderId, setPendingStageLeaderId] = useState<string | null>(null)
+  const wonderSide = wonderSideOf(you.wonderId, you.wonderSide)
+  const stageOptions = you.leaderHandView[0]?.wonderStageOptions
+  const stageChoiceKind = you.leaderHandView[0]?.wonderStageChoiceKind
+  const hasStageChoice = (stageOptions?.length ?? 0) > 0
+  const nextStage = hasStageChoice ? undefined : getEffectiveWonderStages(you, wonderSide)[you.wonderStagesBuilt]
+  const stageBuildsFromDiscard = nextStage?.effects.some((e) => e.kind === "buildFromDiscardPile") ?? false
+  const eligibleDiscardIds = Array.from(new Set(discardPile.filter((id) => !you.builtCardIds.includes(id))))
 
   function recruit(leaderId: string, leaderName: string, buildsFromDiscard: boolean) {
     if (buildsFromDiscard && eligibleDiscardIds.length > 0) {
-      setPending({ type: "recruitLeader", cardId: leaderId, title: `${leaderName} — build free from the discard pile` });
-      return;
+      setPending({ type: "recruitLeader", cardId: leaderId, title: `${leaderName} — build free from the discard pile` })
+      return
     }
-    onSubmit({ type: "recruitLeader", cardId: leaderId });
+    onSubmit({ type: "recruitLeader", cardId: leaderId })
   }
 
   function fundStage(leaderId: string) {
-    if (wonderSide.anyOrder) {
-      setPendingStageLeaderId(leaderId);
-      return;
+    if (hasStageChoice) {
+      setPendingStageLeaderId(leaderId)
+      return
     }
     if (stageBuildsFromDiscard && eligibleDiscardIds.length > 0) {
-      setPending({ type: "buildWonderStageFromLeader", cardId: leaderId, title: `${wonderSide.wonderName} — build free from the discard pile` });
-      return;
+      setPending({
+        type: "buildWonderStageFromLeader",
+        cardId: leaderId,
+        title: `${wonderSide.wonderName} — build free from the discard pile`,
+      })
+      return
     }
-    onSubmit({ type: "buildWonderStageFromLeader", cardId: leaderId });
+    onSubmit({ type: "buildWonderStageFromLeader", cardId: leaderId })
   }
 
   function onStageChosen(leaderId: string, stageIndex: number) {
-    setPendingStageLeaderId(null);
-    const stage = wonderSide.stages[stageIndex];
-    const buildsFromDiscard = stage?.effects.some((e) => e.kind === "buildFromDiscardPile") ?? false;
-    if (buildsFromDiscard && eligibleDiscardIds.length > 0) {
-      setPending({ type: "buildWonderStageFromLeader", cardId: leaderId, title: `${wonderSide.wonderName} — build free from the discard pile`, stageIndex });
-      return;
+    setPendingStageLeaderId(null)
+    const option = stageOptions?.find((o) => o.stageIndex === stageIndex)
+    const buildsFromDiscard = option?.effects.some((e) => e.kind === "buildFromDiscardPile") ?? false
+    const fields = {
+      stageIndex: stageChoiceKind === "ownStage" ? stageIndex : undefined,
+      mirrorStageIndex: stageChoiceKind === "mirrorStage" ? stageIndex : undefined,
     }
-    onSubmit({ type: "buildWonderStageFromLeader", cardId: leaderId, stageIndex });
+    if (buildsFromDiscard && eligibleDiscardIds.length > 0) {
+      setPending({
+        type: "buildWonderStageFromLeader",
+        cardId: leaderId,
+        title: `${wonderSide.wonderName} — build free from the discard pile`,
+        ...fields,
+      })
+      return
+    }
+    onSubmit({ type: "buildWonderStageFromLeader", cardId: leaderId, ...fields })
   }
 
   return (
     <div className="hand-section">
       <h3>Leader recruitment — recruit, fund a wonder stage, or discard</h3>
       {you.leaderHandView.map((view) => {
-        const leader = leaderById(view.cardId);
-        const recruitBuildsFromDiscard = leader.effects.some((e) => e.kind === "recycleDiscardOnRecruit");
+        const leader = leaderById(view.cardId)
+        const recruitBuildsFromDiscard = leader.effects.some((e) => e.kind === "recycleDiscardOnRecruit")
         return (
           <div key={view.cardId} className="leader-recruit-card">
             <div className="leader-recruit-info">
@@ -72,31 +94,61 @@ export function LeaderRecruitPanel({ you, discardPile, onSubmit, submitting }: P
               disabled={submitting || !view.recruitAffordable}
               onClick={() => recruit(view.cardId, leader.name, recruitBuildsFromDiscard)}
             >
-              Recruit {view.recruitFree ? "(free)" : `— 🪙${leader.coinCost}`}
+              Recruit{" "}
+              {view.recruitFree ? (
+                "(free)"
+              ) : (
+                <>
+                  — <CoinIcon amount={leader.coinCost} />
+                </>
+              )}
             </button>
-            {wonderSide.anyOrder
-              ? (view.wonderStageOptions?.length ?? 0) > 0 && (
-                  <button className="action-btn" disabled={submitting || !view.wonderStageAffordable} onClick={() => fundStage(view.cardId)}>
-                    Fund a wonder stage…
-                  </button>
-                )
-              : nextStage && (
-                  <button className="action-btn" disabled={submitting || !view.wonderStageAffordable} onClick={() => fundStage(view.cardId)}>
-                    Fund wonder stage {you.wonderStagesBuilt + 1} — <CostView cost={nextStage.cost} />
-                  </button>
-                )}
-            <button className="action-btn" disabled={submitting} onClick={() => onSubmit({ type: "discardLeaderForCoins", cardId: view.cardId })}>
-              Discard for 🪙3
+            {hasStageChoice ? (
+              <button
+                className="action-btn"
+                disabled={submitting || !view.wonderStageAffordable}
+                onClick={() => fundStage(view.cardId)}
+              >
+                {stageChoiceKind === "mirrorStage"
+                  ? "Fund — mirror a neighbor's Great Wall stage…"
+                  : "Fund a wonder stage…"}
+              </button>
+            ) : (
+              nextStage && (
+                <button
+                  className="action-btn"
+                  disabled={submitting || !view.wonderStageAffordable}
+                  onClick={() => fundStage(view.cardId)}
+                >
+                  Fund wonder stage {you.wonderStagesBuilt + 1} — <CostView cost={nextStage.cost} />
+                </button>
+              )
+            )}
+            <button
+              className="action-btn"
+              disabled={submitting}
+              onClick={() => onSubmit({ type: "discardLeaderForCoins", cardId: view.cardId })}
+            >
+              Discard for <CoinIcon amount={3} gain />
             </button>
           </div>
-        );
+        )
       })}
 
-      {pendingStageLeaderId !== null && you.leaderHandView[0]?.wonderStageOptions && (
+      {pendingStageLeaderId !== null && stageOptions && (
         <WonderStagePicker
-          title={`${wonderSide.wonderName} — choose which stage to fund`}
-          wonderSide={wonderSide}
-          options={you.leaderHandView[0].wonderStageOptions}
+          title={
+            stageChoiceKind === "mirrorStage"
+              ? "Manneken Pis — choose which of your neighbor's Great Wall stages to mirror"
+              : `${wonderSide.wonderName} — choose which stage to fund`
+          }
+          hint={
+            stageChoiceKind === "mirrorStage"
+              ? "This development copies one of your neighbor's Great Wall stages — pick which."
+              : "Choose which wonder stage to build — any order is allowed."
+          }
+          optionLabel={stageChoiceKind === "mirrorStage" ? (i) => `Great Wall stage ${i + 1}` : undefined}
+          options={stageOptions}
           submitting={submitting}
           onCancel={() => setPendingStageLeaderId(null)}
           onPick={(stageIndex) => onStageChosen(pendingStageLeaderId, stageIndex)}
@@ -112,13 +164,19 @@ export function LeaderRecruitPanel({ you, discardPile, onSubmit, submitting }: P
           onPick={(discardPickId) => {
             const action: RoundAction =
               pending.type === "buildWonderStageFromLeader"
-                ? { type: "buildWonderStageFromLeader", cardId: pending.cardId, discardPickId, stageIndex: pending.stageIndex }
-                : { type: "recruitLeader", cardId: pending.cardId, discardPickId };
-            setPending(null);
-            onSubmit(action);
+                ? {
+                    type: "buildWonderStageFromLeader",
+                    cardId: pending.cardId,
+                    discardPickId,
+                    stageIndex: pending.stageIndex,
+                    mirrorStageIndex: pending.mirrorStageIndex,
+                  }
+                : { type: "recruitLeader", cardId: pending.cardId, discardPickId }
+            setPending(null)
+            onSubmit(action)
           }}
         />
       )}
     </div>
-  );
+  )
 }

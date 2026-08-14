@@ -1,4 +1,4 @@
-import { ALL_RESOURCES, getBuiltStageIndices, getCard, getLeaderCard, getWonderSide, type PlayerState, type ResourceType } from "@sw/shared";
+import { ALL_RESOURCES, getBuiltStageIndices, getCard, getEffectiveWonderStages, getLeaderCard, getWonderSide, type PlayerState, type ResourceType } from "@sw/shared";
 
 export interface ProductionSlot {
   id: string;
@@ -23,9 +23,10 @@ export function getProductionSlots(player: PlayerState): ProductionSlot[] {
   if (wonderSide.startingResource) {
     slots.push({ id: "wonder:starting", domain: [wonderSide.startingResource], qty: 1 });
   }
+  const stages = getEffectiveWonderStages(player, wonderSide);
   const builtStageIndices = getBuiltStageIndices(player, wonderSide);
   for (const i of builtStageIndices) {
-    const stage = wonderSide.stages[i];
+    const stage = stages[i];
     if (!stage) continue;
     for (const effect of stage.effects) {
       if (effect.kind === "resource") {
@@ -56,7 +57,7 @@ export function getProductionSlots(player: PlayerState): ProductionSlot[] {
     }
   }
   for (const i of builtStageIndices) {
-    const stage = wonderSide.stages[i];
+    const stage = stages[i];
     if (!stage) continue;
     for (const effect of stage.effects) {
       if (effect.kind !== "dynamicResource") continue;

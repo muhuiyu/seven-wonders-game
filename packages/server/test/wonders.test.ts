@@ -2,7 +2,12 @@ import { getUnbuiltStageIndices, getWonderSide } from "@sw/shared";
 import { describe, expect, it } from "vitest";
 import { canBuildCard, canBuildWonderStage } from "../src/engine/actionResolution.js";
 import { applyAction } from "../src/engine/applyAction.js";
+import { applyLeaderAction } from "../src/engine/leaders.js";
 import { getProductionSlots } from "../src/engine/productionSlots.js";
+import { createGame, resolveMirroredWonderStages } from "../src/engine/setup.js";
+import { getNeighborIds } from "../src/engine/seating.js";
+import { getShieldCount } from "../src/engine/shields.js";
+import { wonderVp } from "../src/engine/scoring.js";
 import { makeGameState, makePlayer } from "./fixtures.js";
 
 // "baths" (blue, costs 1 stone) is a useful probe card: with 0 coins and no stone
@@ -230,5 +235,195 @@ describe("The Great Wall — anyOrder stage building", () => {
     const withIrrelevantIndex = canBuildWonderStage(state, "human", "baths", 2);
     expect(withIrrelevantIndex.legal).toBe(withoutIndex.legal);
     expect(withIrrelevantIndex.reason).toBe(withoutIndex.reason);
+  });
+});
+
+describe("Manneken Pis — mirrors a neighbor's wonder stages", () => {
+  it("resolves Side A's mirror stages against the human's actual neighbors at setup, seed-independently", () => {
+    const state = createGame({
+      playerCount: 4,
+      humanName: "Human",
+      seed: 42,
+      humanWonderId: "mannekenpis",
+      humanWonderSide: "A",
+      expansions: { leaders: false, cities: false },
+    });
+    const human = state.players["human"]!;
+    const { leftId, rightId } = getNeighborIds(state, "human");
+    const leftSide = getWonderSide(state.players[leftId]!.wonderId, state.players[leftId]!.wonderSide);
+    const rightSide = getWonderSide(state.players[rightId]!.wonderId, state.players[rightId]!.wonderSide);
+
+    expect(human.resolvedWonderStages).toBeDefined();
+    const resolved = human.resolvedWonderStages!;
+    const expectedFor = (side: typeof leftSide, stageIndex: number) => (side.wonderId === "greatwall" ? { cost: [], effects: [] } : (side.stages[stageIndex] ?? { cost: [], effects: [] }));
+
+    expect(resolved[0]).toEqual(expectedFor(leftSide, 0)); // dev 1: left's stage 1
+    expect(resolved[1]).toEqual(expectedFor(rightSide, 1)); // dev 2: right's stage 2
+    expect(resolved[2]).toEqual(expectedFor(leftSide, 2)); // dev 3: left's stage 3
+  });
+
+  it("a mirror target that doesn't exist on the neighbor's side (fewer stages) is a permanently unbuildable placeholder", () => {
+    const human = makePlayer("human", {
+      wonderId: "mannekenpis",
+      wonderSide: "A",
+      wonderStagesBuilt: 2, // dev 1 + dev 2 already built, so the next stage to check is dev 3 (index 2)
+      hand: ["baths"],
+      coins: 0,
+    });
+    const left = makePlayer("left", { wonderId: "rhodos", wonderSide: "B" }); // only 2 stages — no "third stage" to mirror for dev 3
+    const right = makePlayer("right", { wonderId: "gizah", wonderSide: "A" });
+    // seats order is [leftId, humanId, rightId] — getNeighborIds treats the previous seat as
+    // "left" and the next seat as "right", so this ordering is what actually makes the
+    // `left`/`right` player objects each other's real neighbors.
+    const state = makeGameState(["left", "human", "right"], { human, left, right });
+
+    resolveMirroredWonderStages(state);
+
+    expect(state.players["human"]!.resolvedWonderStages![2]).toEqual({ cost: [], effects: [] });
+    const check = canBuildWonderStage(state, "human", "baths");
+    expect(check.legal).toBe(false);
+    expect(check.reason).toBe("no valid stage to mirror");
+  });
+
+  it("mirroring a Great Wall neighbor requires an explicit mirrorStageIndex choice, and applyAction persists it", () => {
+    const human = makePlayer("human", {
+      wonderId: "mannekenpis",
+      wonderSide: "A",
+      wonderStagesBuilt: 0,
+      hand: ["baths"],
+      coins: 0,
+      builtCardIds: ["press", "lumber-yard"], // papyrus + wood, covers Great Wall B stage 1's { papyrus: 1, wood: 1 } cost
+    });
+    const left = makePlayer("left", { wonderId: "greatwall", wonderSide: "B", coins: 3 }); // dev 1 mirrors left's stage index 0
+    const right = makePlayer("right", { wonderId: "gizah", wonderSide: "A", coins: 3 });
+    const state = makeGameState(["left", "human", "right"], { human, left, right }); // see seat-order note above
+    resolveMirroredWonderStages(state);
+
+    const withoutChoice = canBuildWonderStage(state, "human", "baths");
+    expect(withoutChoice.legal).toBe(false);
+    expect(withoutChoice.reason).toBe("choose which Great Wall stage to mirror");
+
+    const withChoice = canBuildWonderStage(state, "human", "baths", undefined, 0);
+    expect(withChoice.legal).toBe(true);
+
+    applyAction(state, "human", { type: "buildWonderStage", cardId: "baths", mirrorStageIndex: 0 });
+
+    const after = state.players["human"]!;
+    expect(after.wonderStagesBuilt).toBe(1);
+    expect(after.resolvedWonderStages![0]).toEqual(getWonderSide("greatwall", "B").stages[0]);
+    // Great Wall B stage 1: bankGrantSelfAndNeighbors(self: 8, neighbors: 2) — applied as human's own effect.
+    expect(after.coins).toBe(8);
+    expect(state.players["left"]!.coins).toBe(5);
+    expect(state.players["right"]!.coins).toBe(5);
+  });
+
+  it("Side B's single development grants coins, a shield, and VP all together", () => {
+    const human = makePlayer("human", {
+      wonderId: "mannekenpis",
+      wonderSide: "B",
+      wonderStagesBuilt: 0,
+      hand: ["baths"],
+      coins: 0,
+      builtCardIds: ["lumber-yard", "stone-pit", "ore-vein", "clay-pool", "glassworks", "loom-good", "press"], // 1 of each raw resource
+    });
+    const state = makeGameState(["human", "left", "right"], { human, left: makePlayer("left"), right: makePlayer("right") });
+
+    applyAction(state, "human", { type: "buildWonderStage", cardId: "baths" });
+
+    const after = state.players["human"]!;
+    expect(after.wonderStagesBuilt).toBe(1);
+    expect(after.coins).toBe(7);
+    expect(getShieldCount(after)).toBe(1);
+  });
+
+  it("gives +4 starting coins on top of the normal base (additive), with or without Leaders", () => {
+    const base = createGame({ playerCount: 3, humanName: "Human", seed: 7, humanWonderId: "mannekenpis", expansions: { leaders: false, cities: false } });
+    expect(base.players["human"]!.coins).toBe(3 + 4);
+
+    const withLeaders = createGame({ playerCount: 3, humanName: "Human", seed: 7, humanWonderId: "mannekenpis", expansions: { leaders: true, cities: false } });
+    expect(withLeaders.players["human"]!.coins).toBe(6 + 4);
+  });
+});
+
+describe("Stonehenge — resource-producer and marked-color scoring", () => {
+  it("Side A stage 3 scores VP per dedicated stone-producing card, not flex producers", () => {
+    const human = makePlayer("human", {
+      wonderId: "stonehenge",
+      wonderSide: "A",
+      wonderStagesBuilt: 3, // all 3 stages built
+      builtWonderStageIndices: [],
+      builtCardIds: ["stone-pit", "stone-pit", "timber-yard"], // 2 dedicated stone producers; timber-yard is wood-OR-stone, doesn't count
+    });
+    const state = makeGameState(["human", "left", "right"], { human, left: makePlayer("left"), right: makePlayer("right") });
+
+    expect(wonderVp(state, "human")).toBe(3 + 5 + 2 * 2); // stage1 vp3 + stage2 vp5 + stage3 (2 producers * 2)
+  });
+
+  it("Side B stage 1 grants immediate coins and endgame VP per built stone-producing card", () => {
+    const human = makePlayer("human", {
+      wonderId: "stonehenge",
+      wonderSide: "B",
+      wonderStagesBuilt: 0,
+      builtCardIds: ["stone-pit", "stone-pit", "stone-pit", "ore-vein", "ore-vein", "ore-vein"], // 3 stone producers + 3 ore for the { ore: 3 } cost
+      hand: ["baths"],
+      coins: 0,
+    });
+    const state = makeGameState(["human", "left", "right"], { human, left: makePlayer("left"), right: makePlayer("right") });
+
+    applyAction(state, "human", { type: "buildWonderStage", cardId: "baths" });
+
+    const after = state.players["human"]!;
+    expect(after.coins).toBe(3); // 3 stone producers * 1 coin, immediate
+    expect(wonderVp(state, "human")).toBe(3); // 3 stone producers * 1 VP, endgame
+  });
+
+  it("Side B stage 2 marks the funding card's color and scores VP per matching-color card held by neighbors", () => {
+    const human = makePlayer("human", {
+      wonderId: "stonehenge",
+      wonderSide: "B",
+      wonderStagesBuilt: 1, // stage 1 already built, so this build resolves stage index 1 (dev 2)
+      builtCardIds: ["clay-pool", "clay-pool", "clay-pool", "press"], // covers { clay: 3, papyrus: 1 }
+      hand: ["baths"], // blue card — its color gets marked
+      coins: 0,
+    });
+    const left = makePlayer("left", { builtCardIds: ["baths"] }); // 1 blue card
+    const right = makePlayer("right", { builtCardIds: ["baths", "baths"] }); // 2 blue cards
+    const state = makeGameState(["human", "left", "right"], { human, left, right });
+
+    applyAction(state, "human", { type: "buildWonderStage", cardId: "baths" });
+
+    expect(state.players["human"]!.markedCardColor).toBe("blue");
+    expect(wonderVp(state, "human")).toBe(3); // 1 (left) + 2 (right) blue cards, 1 VP each
+  });
+
+  it("Side A stage 3 counts stone units, not just cards — a Quarry (2 stone) counts double", () => {
+    const human = makePlayer("human", {
+      wonderId: "stonehenge",
+      wonderSide: "A",
+      wonderStagesBuilt: 3,
+      builtWonderStageIndices: [],
+      builtCardIds: ["stone-pit", "quarry"], // 1 unit + 2 units = 3 stone units
+    });
+    const state = makeGameState(["human", "left", "right"], { human, left: makePlayer("left"), right: makePlayer("right") });
+
+    expect(wonderVp(state, "human")).toBe(3 + 5 + 3 * 2); // stage1 vp3 + stage2 vp5 + stage3 (3 stone units * 2)
+  });
+
+  it("building this stage via a Leader leaves markedCardColor unset (no bonus VP), since leaders aren't card-colored", () => {
+    const human = makePlayer("human", {
+      wonderId: "stonehenge",
+      wonderSide: "B",
+      wonderStagesBuilt: 1,
+      builtCardIds: ["clay-pool", "clay-pool", "clay-pool", "press"],
+      leaderHand: ["aristotle"],
+      coins: 0,
+    });
+    const left = makePlayer("left", { builtCardIds: ["baths"] });
+    const state = makeGameState(["human", "left", "right"], { human, left, right: makePlayer("right") });
+
+    applyLeaderAction(state, "human", { type: "buildWonderStageFromLeader", cardId: "aristotle" });
+
+    expect(state.players["human"]!.markedCardColor).toBeUndefined();
+    expect(wonderVp(state, "human")).toBe(0);
   });
 });

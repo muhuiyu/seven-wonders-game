@@ -1,4 +1,4 @@
-import type { WonderSide } from "../types/wonders.js";
+import type { WonderSide, WonderStage } from "../types/wonders.js";
 
 function side(
   wonderId: string,
@@ -163,9 +163,50 @@ export const WONDER_SIDES: WonderSide[] = [
     { cost: [{ resources: { papyrus: 1, wood: 2 } }], effects: [{ kind: "diplomacyToken" }, { kind: "opponentsPayOrDebt", amount: 2 }] },
     { cost: [{ resources: { stone: 2 } }], effects: [{ kind: "dynamicResource", mode: "fillGap" }] },
   ]), requiresExpansion: "cities", anyOrder: true },
+
+  // --- Manneken Pis (base game promo, always available) — no starting resource, +4 coins
+  // at the start instead (startingCoins). Side A has no fixed stage cost/effects at all:
+  // every development mirrors a specific neighbor's specific wonder-stage (cost AND
+  // effect), "whether yet built or not" by that neighbor — resolved once at game setup
+  // (see setup.ts) into each stage's real cost/effects, except when the target neighbor
+  // has The Great Wall, which is resolved as a player choice at build time instead (Great
+  // Wall's 4 stages aren't in a fixed left-to-right order, so "stage index N" doesn't
+  // apply — the Manneken Pis owner picks which of the 4 to mirror). The empty
+  // cost:[]/effects:[] below are placeholders, replaced by setup.ts (or left as a
+  // permanently-unbuildable sentinel if the target neighbor's side doesn't have that many
+  // stages, e.g. Rhodos/Babylon side B). ---
+  { ...side("mannekenpis", "Manneken Pis", "A", undefined, [
+    { cost: [], effects: [], mirrors: { neighbor: "left", stageIndex: 0 } },
+    { cost: [], effects: [], mirrors: { neighbor: "right", stageIndex: 1 } },
+    { cost: [], effects: [], mirrors: { neighbor: "left", stageIndex: 2 } },
+  ]), startingCoins: 4 },
+  // Side B: a single mega-stage costing one of every resource type, granting all three
+  // benefits together — 7 coins now, a permanent +1 shield ("one additional army... at the
+  // end of each Age", i.e. every future military resolution), and 7 VP at endgame.
+  { ...side("mannekenpis", "Manneken Pis", "B", undefined, [
+    {
+      cost: [{ resources: { wood: 1, stone: 1, ore: 1, clay: 1, glass: 1, loom: 1, papyrus: 1 } }],
+      effects: [{ kind: "coins", amount: 7 }, { kind: "shields", count: 1 }, { kind: "vp", amount: 7 }],
+    },
+  ]), startingCoins: 4 },
+
+  // --- Stonehenge (base game promo, always available) — starting resource: wood ---
+  side("stonehenge", "Stonehenge", "A", "wood", [
+    { cost: [{ resources: { ore: 1, clay: 1 } }], effects: [{ kind: "vp", amount: 3 }] },
+    { cost: [{ resources: { clay: 2, papyrus: 1 } }], effects: [{ kind: "vp", amount: 5 }] },
+    { cost: [{ resources: { wood: 3, loom: 1 } }], effects: [{ kind: "vpPerResourceProducer", resource: "stone", perProducer: 2 }] },
+  ]),
+  // Side B has only 2 stages (not the usual 3-4).
+  side("stonehenge", "Stonehenge", "B", "wood", [
+    {
+      cost: [{ resources: { ore: 3 } }],
+      effects: [{ kind: "coinsPerResourceProducer", resource: "stone", amount: 1 }, { kind: "vpPerResourceProducer", resource: "stone", perProducer: 1 }],
+    },
+    { cost: [{ resources: { clay: 3, papyrus: 1 } }], effects: [{ kind: "vpPerNeighborCardOfMarkedColor", perCard: 1 }] },
+  ]),
 ];
 
-export const WONDER_IDS = ["gizah", "rhodos", "ephesos", "babylon", "olympia", "halikarnassos", "alexandria"] as const;
+export const WONDER_IDS = ["gizah", "rhodos", "ephesos", "babylon", "olympia", "halikarnassos", "alexandria", "mannekenpis", "stonehenge"] as const;
 
 export const EXPANSION_WONDER_IDS = ["roma", "petra", "byzantium", "greatwall"] as const;
 
@@ -197,8 +238,21 @@ export function getBuiltStageIndices(player: { wonderStagesBuilt: number; builtW
   return Array.from({ length: player.wonderStagesBuilt }, (_, i) => i);
 }
 
+/**
+ * This player's actual stage array — `resolvedWonderStages` when present (Manneken Pis,
+ * whose mirror-marked stages were resolved once at setup against this specific player's
+ * neighbors), else the wonder's static `stages`. Every other wonder never sets
+ * `resolvedWonderStages`, so this is a no-op passthrough for them.
+ */
+export function getEffectiveWonderStages(player: { resolvedWonderStages?: WonderStage[] }, wonderSide: WonderSide): WonderStage[] {
+  return player.resolvedWonderStages ?? wonderSide.stages;
+}
+
 /** Indices of stages not yet built, in board order. */
-export function getUnbuiltStageIndices(player: { wonderStagesBuilt: number; builtWonderStageIndices: number[] }, wonderSide: WonderSide): number[] {
+export function getUnbuiltStageIndices(
+  player: { wonderStagesBuilt: number; builtWonderStageIndices: number[]; resolvedWonderStages?: WonderStage[] },
+  wonderSide: WonderSide,
+): number[] {
   const built = new Set(getBuiltStageIndices(player, wonderSide));
-  return wonderSide.stages.map((_, i) => i).filter((i) => !built.has(i));
+  return getEffectiveWonderStages(player, wonderSide).map((_, i) => i).filter((i) => !built.has(i));
 }

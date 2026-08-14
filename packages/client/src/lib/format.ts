@@ -1,4 +1,4 @@
-import { getBuiltStageIndices, getCard, getLeaderCard, getWonderSide, type Age, type Card, type CardColor, type CardEffect, type Cost, type MilitaryToken, type ResourceType, type ScienceSymbol } from "@sw/shared";
+import { getBuiltStageIndices, getCard, getEffectiveWonderStages, getLeaderCard, getWonderSide, type Age, type Card, type CardColor, type CardEffect, type Cost, type MilitaryToken, type ResourceType, type ScienceSymbol, type WonderStage } from "@sw/shared";
 import { COLOR_EMOJI } from "./colors";
 
 export const RESOURCE_ICON: Record<ResourceType, string> = {
@@ -196,14 +196,23 @@ export function summarizeMilitaryTokens(tokens: MilitaryToken[]): { value: numbe
   return [...counts.entries()].sort((a, b) => b[0] - a[0]).map(([value, count]) => ({ value, count }));
 }
 
-export function estimateShields(builtCardIds: string[], wonderId: string, wonderSide: "A" | "B", wonderStagesBuilt: number, builtWonderStageIndices: number[]): number {
+export function estimateShields(
+  builtCardIds: string[],
+  wonderId: string,
+  wonderSide: "A" | "B",
+  wonderStagesBuilt: number,
+  builtWonderStageIndices: number[],
+  resolvedWonderStages?: WonderStage[],
+): number {
   let total = 0;
   for (const id of builtCardIds) {
     for (const effect of getCard(id).effects) if (effect.kind === "shields") total += effect.count;
   }
   const side = getWonderSide(wonderId, wonderSide);
-  for (const i of getBuiltStageIndices({ wonderStagesBuilt, builtWonderStageIndices }, side)) {
-    for (const effect of side.stages[i]?.effects ?? []) if (effect.kind === "shields") total += effect.count;
+  const player = { wonderStagesBuilt, builtWonderStageIndices, resolvedWonderStages };
+  const stages = getEffectiveWonderStages(player, side);
+  for (const i of getBuiltStageIndices(player, side)) {
+    for (const effect of stages[i]?.effects ?? []) if (effect.kind === "shields") total += effect.count;
   }
   return total;
 }

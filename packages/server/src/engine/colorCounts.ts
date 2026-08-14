@@ -1,8 +1,19 @@
-import { getCard, type CardColor, type GameState, type MilitaryResult, type PlayerScope, type PlayerState } from "@sw/shared";
+import { getCard, type CardColor, type GameState, type MilitaryResult, type PlayerScope, type PlayerState, type ResourceType } from "@sw/shared";
 import { getNeighbors } from "./seating.js";
 
 export function countCardsOfColor(player: PlayerState, color: CardColor): number {
   return player.builtCardIds.filter((id) => getCard(id).color === color).length;
+}
+
+/** Stonehenge: total units of `resource` produced by this player's built cards that solely (not as one option among several) produce it. */
+export function countResourceProducerUnits(player: PlayerState, resource: ResourceType): number {
+  return player.builtCardIds.reduce((total, id) => {
+    const card = getCard(id);
+    const qty = card.effects
+      .filter((e) => e.kind === "resource" && e.production.options.length === 1 && e.production.options[0] === resource)
+      .reduce((sum, e) => sum + (e as { kind: "resource"; production: { qty: number } }).production.qty, 0);
+    return total + qty;
+  }, 0);
 }
 
 export function countByScope(state: GameState, playerId: string, color: CardColor, scope: PlayerScope): number {

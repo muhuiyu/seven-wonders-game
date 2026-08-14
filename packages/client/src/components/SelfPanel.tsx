@@ -1,6 +1,6 @@
-import { CARD_COLORS, getBuiltStageIndices, type GameStateView } from "@sw/shared";
+import { CARD_COLORS, getBuiltStageIndices, getEffectiveWonderStages, type GameStateView } from "@sw/shared";
 import { COLOR_VAR } from "../lib/colors";
-import { CardEffectsView, CostView, ResourceIcon } from "./CardEffects";
+import { CardEffectsView, CoinIcon, CostView, ResourceIcon } from "./CardEffects";
 import { CardTooltip } from "./CardTooltip";
 import { HoverTooltip } from "./HoverTooltip";
 import { cardById, leaderById, wonderSideOf } from "../lib/format";
@@ -28,20 +28,39 @@ export function SelfPanel({ you }: Props) {
             Starting bonus: <CardEffectsView card={{ effects: wonderSide.startingEffects }} />
           </div>
         )}
+        {!!wonderSide.startingCoins && (
+          <div className="wonder-starting-bonus">
+            Starting bonus: <CoinIcon amount={wonderSide.startingCoins} gain />
+          </div>
+        )}
         <div className="wonder-stages">
           {(() => {
             const builtStages = new Set(getBuiltStageIndices(you, wonderSide));
-            return wonderSide.stages.map((stage, i) => (
-              <div key={i} className={`wonder-stage-chip${builtStages.has(i) ? " built" : ""}`}>
-                <span className="wonder-stage-cost">
-                  {builtStages.has(i) ? "✓ " : ""}
-                  <CostView cost={stage.cost} />
-                </span>
-                <div className="wonder-stage-effect">
-                  <CardEffectsView card={{ effects: stage.effects }} />
+            const stages = getEffectiveWonderStages(you, wonderSide);
+            return wonderSide.stages.map((templateStage, i) => {
+              const stage = stages[i]!;
+              const built = builtStages.has(i);
+              const pendingMirror = !built && templateStage.mirrors && stage.cost.length === 0;
+              return (
+                <div key={i} className={`wonder-stage-chip${built ? " built" : ""}`}>
+                  {pendingMirror ? (
+                    <span className="wonder-stage-cost" style={{ color: "var(--text-dim)" }}>
+                      Mirrors your neighbor's wonder — revealed when built
+                    </span>
+                  ) : (
+                    <>
+                      <span className="wonder-stage-cost">
+                        {built ? "✓ " : ""}
+                        <CostView cost={stage.cost} />
+                      </span>
+                      <div className="wonder-stage-effect">
+                        <CardEffectsView card={{ effects: stage.effects }} />
+                      </div>
+                    </>
+                  )}
                 </div>
-              </div>
-            ));
+              );
+            });
           })()}
         </div>
       </div>
@@ -91,7 +110,9 @@ export function SelfPanel({ you }: Props) {
                   content={
                     <>
                       <span className="card-tooltip-name">{leader.name}</span>
-                      <span className="card-tooltip-cost">🪙{leader.coinCost}</span>
+                      <span className="card-tooltip-cost">
+                        <CoinIcon amount={leader.coinCost} />
+                      </span>
                       {leader.effects.length > 0 && (
                         <span className="card-tooltip-effect">
                           <CardEffectsView card={leader} />

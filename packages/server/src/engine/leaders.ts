@@ -1,5 +1,5 @@
-import { getLeaderCard, getUnbuiltStageIndices, getWonderSide, type GameState, type RoundAction } from "@sw/shared";
-import { getAffordability, getEffectiveCost } from "./actionResolution.js";
+import { getEffectiveWonderStages, getLeaderCard, getUnbuiltStageIndices, getWonderSide, type GameState, type RoundAction } from "@sw/shared";
+import { getAffordability, getEffectiveCost, getPendingGreatWallMirror } from "./actionResolution.js";
 import { applyImmediateEffects } from "./effects.js";
 import { payAndCredit, resolveDiscardPileBuild } from "./applyAction.js";
 import { getActiveEffectSources } from "./effectSources.js";
@@ -63,13 +63,24 @@ export function applyLeaderAction(state: GameState, playerId: string, action: Ro
     } else {
       idx = player.wonderStagesBuilt;
     }
-    const stage = wonderSide.stages[idx];
+    let stage = getEffectiveWonderStages(player, wonderSide)[idx];
     if (!stage) throw new Error("All wonder stages already built");
+
+    const mirrorNeighborSide = getPendingGreatWallMirror(state, playerId, wonderSide, idx);
+    if (mirrorNeighborSide) {
+      if (action.mirrorStageIndex === undefined || !mirrorNeighborSide.stages[action.mirrorStageIndex]) {
+        throw new Error("Choose which Great Wall stage to mirror");
+      }
+      stage = mirrorNeighborSide.stages[action.mirrorStageIndex]!;
+    }
+    if (stage.cost.length === 0) throw new Error("No valid stage to mirror");
+
     const effectiveCost = getEffectiveCost(player, stage.cost, "wonderStage");
     const payment = getAffordability(state, playerId, effectiveCost);
     if (!payment.affordable) throw new Error("Cannot afford this wonder stage");
 
     removeFrom(player.leaderHand, action.cardId, "Leader");
+    if (mirrorNeighborSide && player.resolvedWonderStages) player.resolvedWonderStages[idx] = stage;
     payAndCredit(state, playerId, payment.totalCoinCost, payment.purchases);
     player.wonderStagesBuilt += 1;
     if (wonderSide.anyOrder) player.builtWonderStageIndices.push(idx);

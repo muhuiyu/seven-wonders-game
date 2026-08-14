@@ -10,7 +10,18 @@ import type {
   ScienceSymbol,
 } from "@sw/shared"
 import { COLOR_LABEL } from "../lib/format"
-import { DIPLOMACY_TOKEN_IMG, RESOURCE_IMG, SCIENCE_IMG, SHIELD_IMG, victoryPointIcon } from "../lib/icons"
+import {
+  BUILD_FROM_DISCARD_ICON,
+  coinIcon,
+  COIN_BLANK_IMG,
+  coinLossIcon,
+  COPY_NEIGHBOR_SCIENCE_ICON,
+  DIPLOMACY_TOKEN_IMG,
+  RESOURCE_IMG,
+  SCIENCE_IMG,
+  SHIELD_IMG,
+  victoryPointIcon,
+} from "../lib/icons"
 
 export function ResourceIcon({ type }: { type: ResourceType }) {
   return <img className="icon-symbol" src={RESOURCE_IMG[type]} alt={type} title={type} />
@@ -28,14 +39,45 @@ function DiplomacyTokenIcon() {
   return <img className="icon-symbol" src={DIPLOMACY_TOKEN_IMG} alt="diplomacy token" title="diplomacy token" />
 }
 
-function VictoryPointIcon({ points }: { points: number }) {
+function BuildFromDiscardIcon() {
   return (
     <img
       className="icon-symbol"
-      src={victoryPointIcon(points)}
-      alt={`${points} victory points`}
-      title={`${points} victory points`}
+      src={BUILD_FROM_DISCARD_ICON}
+      alt="build a free card from the discard pile"
+      title="Build a free card of your choice from the discard pile"
     />
+  )
+}
+
+function VictoryPointIcon({ points }: { points: number }) {
+  const icon = victoryPointIcon(points)
+  if (!icon) return <>+{points} 🏆 VP</>
+  return <img className="icon-symbol" src={icon} alt={`${points} victory points`} title={`${points} victory points`} />
+}
+
+/** `gain` prefixes the text fallback with "+" for effects that grant coins; omit it for
+ *  costs/payments, where the icon art has no "+" baked in either. */
+export function CoinIcon({ amount, gain }: { amount: number; gain?: boolean }) {
+  const icon = coinIcon(amount)
+  if (!icon) return <>{gain ? "+" : ""}{amount} 🪙</>
+  return <img className="icon-symbol" src={icon} alt={`${amount} coins`} title={`${amount} coins`} />
+}
+
+/** The "everyone else loses N coins" cracked-coin icon, distinct from the gain-styled CoinIcon. */
+export function CoinLossIcon({ amount }: { amount: number }) {
+  const icon = coinLossIcon(amount)
+  if (!icon) return <>{amount} 🪙</>
+  return <img className="icon-symbol" src={icon} alt={`lose ${amount} coins`} title={`lose ${amount} coins`} />
+}
+
+/** A running coin total (a player's holdings), shown as the unnumbered coin icon + the number —
+ *  unlike CoinIcon, this stays legible for any total instead of needing per-amount art. */
+export function CoinCount({ amount }: { amount: number }) {
+  return (
+    <>
+      <img className="icon-symbol coin-count-icon" src={COIN_BLANK_IMG} alt="coins" title={`${amount} coins`} /> {amount}
+    </>
   )
 }
 
@@ -64,7 +106,7 @@ function joinSlash(nodes: ReactNode[]): ReactNode {
 export function CostView({ cost }: { cost: Cost }) {
   const options = cost.map((option, i) => {
     const bits: ReactNode[] = []
-    if (option.coins) bits.push(<span key="coins">🪙{option.coins}</span>)
+    if (option.coins) bits.push(<CoinIcon key="coins" amount={option.coins} />)
     if (option.resources) {
       for (const [res, qty] of Object.entries(option.resources)) {
         bits.push(
@@ -101,7 +143,7 @@ export function PurchasesView({ purchases }: { purchases: ResourcePurchase[] }) 
       {[...bySide.entries()].map(([side, coins], i) => (
         <span key={side}>
           {i > 0 && ", "}
-          🪙{coins} to {PURCHASE_SIDE_LABEL[side]}
+          <CoinIcon amount={coins} /> to {PURCHASE_SIDE_LABEL[side]}
         </span>
       ))}
     </div>
@@ -121,13 +163,16 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
     case "shields":
       return (
         <>
-          +{effect.count} <ShieldIcon />
+          {Array.from({ length: effect.count }, (_, i) => (
+            <ShieldIcon key={i} />
+          ))}
         </>
       )
     case "science":
       return (
         <>
-          +1 <ScienceIcon symbol={effect.symbol} />
+          {compact ? "" : "Produce "}
+          <ScienceIcon symbol={effect.symbol} />
         </>
       )
     case "scienceChoice":
@@ -139,7 +184,7 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
         </>
       )
     case "coins":
-      return <>+{effect.amount} 🪙</>
+      return <CoinIcon amount={effect.amount} gain />
     case "vp":
       return <VictoryPointIcon points={effect.amount} />
     case "vpPerCard":
@@ -152,14 +197,14 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
     case "coinsPerCard":
       return (
         <>
-          +{effect.perCard} 🪙 per <ColorTag color={effect.color} /> card in {SCOPE_LABEL[effect.scope]}
+          <CoinIcon amount={effect.perCard} gain /> per <ColorTag color={effect.color} /> card in {SCOPE_LABEL[effect.scope]}
         </>
       )
     case "vpAndCoinsPerCard":
       return (
         <>
-          +{effect.coinsPer} 🪙 now, <VictoryPointIcon points={effect.vpPer} /> per <ColorTag color={effect.color} />{" "}
-          card in {SCOPE_LABEL[effect.scope]}
+          <CoinIcon amount={effect.coinsPer} gain /> now, <VictoryPointIcon points={effect.vpPer} /> per{" "}
+          <ColorTag color={effect.color} /> card in {SCOPE_LABEL[effect.scope]}
         </>
       )
     case "vpPerWonderStage":
@@ -208,11 +253,15 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
     case "extraTurn":
       return <>Take another turn immediately</>
     case "buildFromDiscardPile":
-      return <>Build a free card of your choice from the discard pile</>
+      return <BuildFromDiscardIcon />
     case "diplomacyToken":
       return <DiplomacyTokenIcon />
     case "opponentsPayOrDebt":
-      return <>Every other player pays {effect.amount} 🪙 or takes Debt</>
+      return (
+        <>
+          Every other player pays <CoinLossIcon amount={effect.amount} /> or takes Debt
+        </>
+      )
     case "opponentsPayPerOwnMetric":
       return (
         <>
@@ -223,7 +272,7 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
     case "bankGrantSelfAndNeighbors":
       return (
         <>
-          +{effect.self} 🪙 for you, +{effect.neighbors} 🪙 for each neighbor
+          <CoinIcon amount={effect.self} gain /> for you, <CoinIcon amount={effect.neighbors} gain /> for each neighbor
         </>
       )
     case "tradeRebate":
@@ -241,7 +290,14 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
         </>
       )
     case "copyNeighborScienceSymbol":
-      return <>Copy 1 science symbol from a neighboring Science card</>
+      return (
+        <img
+          className="icon-symbol"
+          src={COPY_NEIGHBOR_SCIENCE_ICON}
+          alt="copy neighbor science"
+          title="copy neighbor science"
+        />
+      )
     case "vpPerMilitaryToken":
       return (
         <>
@@ -252,7 +308,7 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
     case "coinsPerMilitaryToken":
       return (
         <>
-          +{effect.amount} 🪙 per military {effect.result} token
+          <CoinIcon amount={effect.amount} gain /> per military {effect.result} token
         </>
       )
     case "buildDiscount":
@@ -284,7 +340,11 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
         </>
       )
     case "coinsOnMilitaryWin":
-      return <>+{effect.amount} 🪙 whenever you win a military conflict</>
+      return (
+        <>
+          <CoinIcon amount={effect.amount} gain /> whenever you win a military conflict
+        </>
+      )
     case "freeBuildForColor":
       return (
         <>
@@ -292,15 +352,19 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
         </>
       )
     case "recycleDiscardOnRecruit":
-      return <>Build a free card of your choice from the discard pile</>
+      return <BuildFromDiscardIcon />
     case "redirectDefeatToken":
       return <>Your defeat tokens are instead given to your victorious neighbor</>
     case "coinsOnChainBuild":
-      return <>+{effect.amount} 🪙 whenever you build for free via chaining</>
+      return (
+        <>
+          <CoinIcon amount={effect.amount} gain /> whenever you build for free via chaining
+        </>
+      )
     case "coinsOnColorBuild":
       return (
         <>
-          +{effect.amount} 🪙 whenever you build a <ColorTag color={effect.color} /> card
+          <CoinIcon amount={effect.amount} gain /> whenever you build a <ColorTag color={effect.color} /> card
         </>
       )
     case "vpPerCoinsHeld":
@@ -323,6 +387,24 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
       )
     case "copyNeighborLeader":
       return <>Gain the effects of one recruited Leader in a neighboring city</>
+    case "coinsPerResourceProducer":
+      return (
+        <>
+          <CoinIcon amount={effect.amount} gain /> per <ResourceIcon type={effect.resource} /> produced in your city
+        </>
+      )
+    case "vpPerResourceProducer":
+      return (
+        <>
+          <VictoryPointIcon points={effect.perProducer} /> per <ResourceIcon type={effect.resource} /> produced in your city
+        </>
+      )
+    case "vpPerNeighborCardOfMarkedColor":
+      return (
+        <>
+          <VictoryPointIcon points={effect.perCard} /> per neighbor's card matching the color of the card used to build this
+        </>
+      )
     default:
       return null
   }

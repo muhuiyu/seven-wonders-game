@@ -1,23 +1,55 @@
-import { getLeaderCard, getUnbuiltStageIndices, getWonderSide, type GameState, type GameStateView, type HandCardView, type LeaderHandCardView } from "@sw/shared";
-import { canBuildCard, canBuildWonderStage, getAffordability, getEffectiveCost } from "./actionResolution.js";
+import { getEffectiveWonderStages, getLeaderCard, getUnbuiltStageIndices, getWonderSide, type GameState, type GameStateView, type HandCardView, type LeaderHandCardView, type WonderStage } from "@sw/shared";
+import { canBuildCard, canBuildWonderStage, getAffordability, getEffectiveCost, getPendingGreatWallMirror } from "./actionResolution.js";
 import { getLeaderRecruitCost } from "./leaders.js";
+
+/**
+ * Whichever wonder-stage choice (if any) is needed to build `you`'s next stage right now:
+ * "ownStage" for a Great Wall player picking which of their own unbuilt stages to build,
+ * "mirrorStage" for a Manneken Pis player picking which of a Great-Wall-neighbor's 4
+ * stages to copy. `null` when the next stage is a single fixed (or already-resolved)
+ * cost/effect — the common case for every other wonder. Affordability here doesn't depend
+ * on which card funds the build (any hand card works, and leader-funded builds don't need
+ * one at all), so this computes cost/affordability directly rather than going through
+ * `canBuildWonderStage`'s "card in hand" check.
+ */
+function getWonderStageChoice(
+  state: GameState,
+  viewerId: string,
+): { kind: "ownStage" | "mirrorStage"; options: NonNullable<HandCardView["wonderStageOptions"]> } | null {
+  const you = state.players[viewerId]!;
+  const wonderSide = getWonderSide(you.wonderId, you.wonderSide);
+
+  const toOption = (stageIndex: number, stage: WonderStage) => {
+    const payment = getAffordability(state, viewerId, getEffectiveCost(you, stage.cost, "wonderStage"));
+    return { stageIndex, cost: stage.cost, effects: stage.effects, affordable: payment.affordable, purchases: payment.purchases };
+  };
+
+  if (wonderSide.anyOrder) {
+    const stages = getEffectiveWonderStages(you, wonderSide);
+    const options = getUnbuiltStageIndices(you, wonderSide).map((stageIndex) => toOption(stageIndex, stages[stageIndex]!));
+    return { kind: "ownStage", options };
+  }
+
+  const mirrorNeighborSide = getPendingGreatWallMirror(state, viewerId, wonderSide, you.wonderStagesBuilt);
+  if (mirrorNeighborSide) {
+    const options = mirrorNeighborSide.stages.map((stage, mirrorStageIndex) => toOption(mirrorStageIndex, stage));
+    return { kind: "mirrorStage", options };
+  }
+
+  return null;
+}
 
 export function buildView(state: GameState, viewerId: string): GameStateView {
   const you = state.players[viewerId]!;
-  const wonderSide = getWonderSide(you.wonderId, you.wonderSide);
+  const stageChoice = getWonderStageChoice(state, viewerId);
 
   const handView: HandCardView[] = you.hand.map((cardId) => {
     const buildCheck = canBuildCard(state, viewerId, cardId);
 
     let wonderStageAffordable: boolean;
     let wonderStagePurchases: HandCardView["wonderStagePurchases"];
-    let wonderStageOptions: HandCardView["wonderStageOptions"];
-    if (wonderSide.anyOrder) {
-      wonderStageOptions = getUnbuiltStageIndices(you, wonderSide).map((stageIndex) => {
-        const c = canBuildWonderStage(state, viewerId, cardId, stageIndex);
-        return { stageIndex, affordable: c.legal, purchases: c.payment?.purchases ?? [] };
-      });
-      wonderStageAffordable = wonderStageOptions.some((o) => o.affordable);
+    if (stageChoice) {
+      wonderStageAffordable = stageChoice.options.some((o) => o.affordable);
       wonderStagePurchases = [];
     } else {
       const stageCheck = canBuildWonderStage(state, viewerId, cardId);
@@ -33,20 +65,15 @@ export function buildView(state: GameState, viewerId: string): GameStateView {
       wonderStageAffordable,
       wonderStageFree: false,
       wonderStagePurchases,
-      wonderStageOptions,
+      wonderStageOptions: stageChoice?.options,
+      wonderStageChoiceKind: stageChoice?.kind,
       alreadyBuilt: you.builtCardIds.includes(cardId),
     };
   });
 
   let leaderStageAffordable: boolean;
-  let leaderWonderStageOptions: LeaderHandCardView["wonderStageOptions"];
-  if (wonderSide.anyOrder) {
-    leaderWonderStageOptions = getUnbuiltStageIndices(you, wonderSide).map((stageIndex) => {
-      const stage = wonderSide.stages[stageIndex]!;
-      const affordable = getAffordability(state, viewerId, getEffectiveCost(you, stage.cost, "wonderStage")).affordable;
-      return { stageIndex, affordable };
-    });
-    leaderStageAffordable = leaderWonderStageOptions.some((o) => o.affordable);
+  if (stageChoice) {
+    leaderStageAffordable = stageChoice.options.some((o) => o.affordable);
   } else {
     const nextStageCost = getEffectiveWonderStageCost(state, viewerId);
     leaderStageAffordable = nextStageCost !== null && getAffordability(state, viewerId, nextStageCost).affordable;
@@ -60,7 +87,8 @@ export function buildView(state: GameState, viewerId: string): GameStateView {
       recruitAffordable: you.coins >= cost,
       recruitFree: cost === 0,
       wonderStageAffordable: leaderStageAffordable,
-      wonderStageOptions: leaderWonderStageOptions,
+      wonderStageOptions: stageChoice?.options,
+      wonderStageChoiceKind: stageChoice?.kind,
     };
   });
 
@@ -81,6 +109,6 @@ export function buildView(state: GameState, viewerId: string): GameStateView {
 function getEffectiveWonderStageCost(state: GameState, playerId: string) {
   const player = state.players[playerId]!;
   const wonderSide = getWonderSide(player.wonderId, player.wonderSide);
-  const stage = wonderSide.stages[player.wonderStagesBuilt];
-  return stage ? getEffectiveCost(player, stage.cost, "wonderStage") : null;
+  const stage = getEffectiveWonderStages(player, wonderSide)[player.wonderStagesBuilt];
+  return stage && stage.cost.length > 0 ? getEffectiveCost(player, stage.cost, "wonderStage") : null;
 }

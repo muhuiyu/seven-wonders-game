@@ -1,4 +1,4 @@
-import { useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 interface Props {
@@ -19,6 +19,7 @@ const MARGIN = 8;
  */
 export function HoverTooltip({ content, children, wide }: Props) {
   const triggerRef = useRef<HTMLSpanElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number; flip: boolean } | null>(null);
 
   function show() {
@@ -34,6 +35,20 @@ export function HoverTooltip({ content, children, wide }: Props) {
       flip,
     });
   }
+
+  // The initial flip decision above only knows the trigger's position, not the tooltip's actual
+  // height (it hasn't rendered yet). Tall content — e.g. a multi-stage wonder breakdown — can
+  // still poke off the top of the viewport even when the trigger itself is well below the 90px
+  // guess. Once the tooltip has rendered, measure it and flip below if it's overflowing.
+  useLayoutEffect(() => {
+    if (!pos || pos.flip) return;
+    const rect = triggerRef.current?.getBoundingClientRect();
+    const height = tooltipRef.current?.getBoundingClientRect().height;
+    if (!rect || !height) return;
+    if (rect.top - height - MARGIN < 0) {
+      setPos({ top: rect.bottom + MARGIN, left: pos.left, flip: true });
+    }
+  }, [pos]);
 
   // onMouseOver/onMouseOut rather than onMouseEnter/onMouseLeave: React synthesizes enter/leave
   // by walking the DOM ancestor chain of the native event's relatedTarget, and that walk breaks
@@ -55,6 +70,7 @@ export function HoverTooltip({ content, children, wide }: Props) {
       {pos &&
         createPortal(
           <div
+            ref={tooltipRef}
             className={`card-tooltip-portal${wide ? " card-tooltip-portal--wide" : ""}`}
             style={{ top: pos.top, left: pos.left, transform: `translate(-50%, ${pos.flip ? "0" : "-100%"})` }}
           >

@@ -4,15 +4,18 @@ import {
   buildAgeIIDeck,
   buildAgeIIINonGuildDeck,
   getAvailableWonderIds,
+  getWonderSide,
   LEADER_IDS,
   selectBlackCards,
   selectGuilds,
   type ExpansionOptions,
   type GameState,
   type PlayerState,
+  type WonderStage,
 } from "@sw/shared";
 import { mulberry32, shuffle } from "./rng.js";
 import { assignBotStrategy } from "../bot/strategyAssignment.js";
+import { getNeighborIds } from "./seating.js";
 
 export interface SetupOptions {
   playerCount: number;
@@ -88,6 +91,7 @@ export function createGame(opts: SetupOptions): GameState {
   const players: Record<string, PlayerState> = {};
   seats.forEach((playerId, i) => {
     const wonder = wonderAssignment.get(playerId)!;
+    const wonderSide = getWonderSide(wonder.id, wonder.side);
     const hand = expansions.leaders ? [] : ageIDeck.slice(i * handSize, i * handSize + handSize);
     const isBot = playerId !== humanId;
     const botStrategy = isBot ? assignBotStrategy(wonder.id, rng) : undefined;
@@ -103,7 +107,7 @@ export function createGame(opts: SetupOptions): GameState {
       builtWonderStageIndices: [],
       builtCardIds: [],
       discardedCardIds: [],
-      coins: startingCoins,
+      coins: startingCoins + (wonderSide.startingCoins ?? 0),
       militaryTokens: [],
       hand,
       chosenScienceSymbols: [],
@@ -115,7 +119,7 @@ export function createGame(opts: SetupOptions): GameState {
     };
   });
 
-  return {
+  const state: GameState = {
     id: randomUUID(),
     createdAt: Date.now(),
     seats,
@@ -129,4 +133,37 @@ export function createGame(opts: SetupOptions): GameState {
     expansions,
     futureDecks: { age1Deck: expansions.leaders ? ageIDeck : undefined, age2Deck: ageIIDeck, age3Deck: ageIIIDeck },
   };
+
+  resolveMirroredWonderStages(state);
+
+  return state;
+}
+
+/**
+ * Manneken Pis: each `mirrors`-marked stage copies a specific neighbor's specific
+ * wonder-stage cost+effects. Neighbor assignment never changes mid-game, so this is fully
+ * resolved once, here, into `player.resolvedWonderStages` — every other engine/bot/client
+ * file then just reads that array (via `getEffectiveWonderStages`) like any static stage
+ * list, with zero awareness that mirroring exists. The one exception is a target neighbor
+ * with The Great Wall (whose 4 stages aren't in a fixed order): that stays an empty
+ * placeholder here and is resolved later, as a player choice, at build time.
+ */
+export function resolveMirroredWonderStages(state: GameState): void {
+  for (const playerId of state.seats) {
+    const player = state.players[playerId]!;
+    const wonderSide = getWonderSide(player.wonderId, player.wonderSide);
+    if (!wonderSide.stages.some((s) => s.mirrors)) continue;
+
+    const { leftId, rightId } = getNeighborIds(state, playerId);
+    const left = state.players[leftId]!;
+    const right = state.players[rightId]!;
+
+    player.resolvedWonderStages = wonderSide.stages.map((stage): WonderStage => {
+      if (!stage.mirrors) return stage;
+      const neighbor = stage.mirrors.neighbor === "left" ? left : right;
+      const neighborSide = getWonderSide(neighbor.wonderId, neighbor.wonderSide);
+      if (neighborSide.wonderId === "greatwall") return { cost: [], effects: [] }; // resolved at build time instead
+      return neighborSide.stages[stage.mirrors.stageIndex] ?? { cost: [], effects: [] };
+    });
+  }
 }

@@ -48,6 +48,9 @@ export type CardEffect =
   | { kind: "copyNeighborScienceSymbol" } // Pigeon Loft/Spy Ring/Torture Chamber: copy 1 science symbol from a neighbor's green card
   | { kind: "vpPerMilitaryToken"; result: MilitaryResult; scope: PlayerScope; perToken: number }
   | { kind: "coinsPerMilitaryToken"; result: MilitaryResult; amount: number } // immediate, self only, at build time
+  | { kind: "coinsPerResourceProducer"; resource: ResourceType; amount: number } // Stonehenge: immediate, self only, at build time — coins per unit of `resource` solely produced by built cards
+  | { kind: "vpPerResourceProducer"; resource: ResourceType; perProducer: number } // Stonehenge: endgame, self only — VP per unit of `resource` solely produced by built cards
+  | { kind: "vpPerNeighborCardOfMarkedColor"; perCard: number } // Stonehenge: endgame VP per card of `player.markedCardColor` (captured at build time from the card spent to fund this stage) held by either neighbor
   // --- Leaders expansion ---
   | { kind: "buildDiscount"; appliesTo: CardColor | "wonderStage"; units: number } // waive `units` resources (player's choice which) when building matching cards
   | { kind: "freeWonderStageResourceCost" } // Architect Cabinet (Cities): from now on, build Wonder stages ignoring their resource cost entirely (coin costs still apply)

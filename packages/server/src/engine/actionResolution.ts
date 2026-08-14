@@ -1,4 +1,4 @@
-import { getCard, getUnbuiltStageIndices, getWonderSide, type Cost, type CardColor, type GameState, type PlayerState } from "@sw/shared";
+import { getCard, getEffectiveWonderStages, getUnbuiltStageIndices, getWonderSide, type Cost, type CardColor, type GameState, type PlayerState, type WonderSide } from "@sw/shared";
 import { isFreeViaChain } from "./chaining.js";
 import { getNeighbors } from "./seating.js";
 import { getProductionSlots } from "./productionSlots.js";
@@ -96,7 +96,23 @@ export interface WonderStageCheck {
   payment?: AffordabilityResult;
 }
 
-export function canBuildWonderStage(state: GameState, playerId: string, cardId: string, stageIndex?: number): WonderStageCheck {
+/**
+ * Manneken Pis: true when `wonderSide.stages[idx]` mirrors a neighbor whose wonder is The
+ * Great Wall — since Great Wall's 4 stages aren't in a fixed left-to-right order, "mirror
+ * my neighbor's stage index N" doesn't apply, so the Manneken Pis owner instead picks which
+ * of the 4 to copy at build time (`mirrorStageIndex`) rather than it being resolved once at
+ * setup like every other mirror target. Returns that neighbor's WonderSide, or null.
+ */
+export function getPendingGreatWallMirror(state: GameState, playerId: string, wonderSide: WonderSide, idx: number): WonderSide | null {
+  const template = wonderSide.stages[idx];
+  if (!template?.mirrors) return null;
+  const { left, right } = getNeighbors(state, playerId);
+  const neighbor = template.mirrors.neighbor === "left" ? left : right;
+  const neighborSide = getWonderSide(neighbor.wonderId, neighbor.wonderSide);
+  return neighborSide.wonderId === "greatwall" ? neighborSide : null;
+}
+
+export function canBuildWonderStage(state: GameState, playerId: string, cardId: string, stageIndex?: number, mirrorStageIndex?: number): WonderStageCheck {
   const player = state.players[playerId]!;
   if (!player.hand.includes(cardId)) return { legal: false, reason: "not in hand" };
   const wonderSide = getWonderSide(player.wonderId, player.wonderSide);
@@ -110,8 +126,18 @@ export function canBuildWonderStage(state: GameState, playerId: string, cardId: 
   } else {
     idx = player.wonderStagesBuilt;
   }
-  const stage = wonderSide.stages[idx];
+
+  let stage = getEffectiveWonderStages(player, wonderSide)[idx];
   if (!stage) return { legal: false, reason: "all wonder stages built" };
+
+  const mirrorNeighborSide = getPendingGreatWallMirror(state, playerId, wonderSide, idx);
+  if (mirrorNeighborSide) {
+    if (mirrorStageIndex === undefined || !mirrorNeighborSide.stages[mirrorStageIndex]) {
+      return { legal: false, reason: "choose which Great Wall stage to mirror" };
+    }
+    stage = mirrorNeighborSide.stages[mirrorStageIndex]!;
+  }
+  if (stage.cost.length === 0) return { legal: false, reason: "no valid stage to mirror" };
 
   const effectiveCost = getEffectiveCost(player, stage.cost, "wonderStage");
   const payment = getAffordability(state, playerId, effectiveCost);

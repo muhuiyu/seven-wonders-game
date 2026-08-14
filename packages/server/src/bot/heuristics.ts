@@ -1,5 +1,6 @@
-import { getCard, getLeaderCard, getWonderSide, type BotStrategyId, type CardColor, type CardEffect, type GameState, type RoundAction } from "@sw/shared";
+import { getCard, getEffectiveWonderStages, getLeaderCard, getWonderSide, type BotStrategyId, type CardColor, type CardEffect, type GameState, type RoundAction } from "@sw/shared";
 import { applyAction } from "../engine/applyAction.js";
+import { getPendingGreatWallMirror } from "../engine/actionResolution.js";
 import { applyLeaderAction } from "../engine/leaders.js";
 import { getNeighbors } from "../engine/seating.js";
 import { estimatePlayerValue } from "../engine/scoring.js";
@@ -94,7 +95,9 @@ function effectsForAction(state: GameState, playerId: string, action: RoundActio
     const player = state.players[playerId]!;
     const wonderSide = getWonderSide(player.wonderId, player.wonderSide);
     const idx = wonderSide.anyOrder ? action.stageIndex! : player.wonderStagesBuilt;
-    return wonderSide.stages[idx]?.effects ?? [];
+    const mirrorNeighborSide = getPendingGreatWallMirror(state, playerId, wonderSide, idx);
+    if (mirrorNeighborSide) return mirrorNeighborSide.stages[action.mirrorStageIndex!]?.effects ?? [];
+    return getEffectiveWonderStages(player, wonderSide)[idx]?.effects ?? [];
   }
   return [];
 }
@@ -103,7 +106,8 @@ const TYPE_PRIORITY: Partial<Record<RoundAction["type"], number>> = { buildWonde
 
 function sortKey(action: RoundAction): string {
   const stageIndex = action.type === "buildWonderStage" || action.type === "buildWonderStageFromLeader" ? (action.stageIndex ?? "") : "";
-  return `${TYPE_PRIORITY[action.type] ?? 9}-${action.cardId}-${stageIndex}`;
+  const mirrorStageIndex = action.type === "buildWonderStage" || action.type === "buildWonderStageFromLeader" ? (action.mirrorStageIndex ?? "") : "";
+  return `${TYPE_PRIORITY[action.type] ?? 9}-${action.cardId}-${stageIndex}-${mirrorStageIndex}`;
 }
 
 function scoreCandidate(state: GameState, playerId: string, action: RoundAction): number {

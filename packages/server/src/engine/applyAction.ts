@@ -1,5 +1,5 @@
-import { getCard, getWonderSide, type CardColor, type GameState, type RoundAction } from "@sw/shared";
-import { canBuildCard, canBuildWonderStage } from "./actionResolution.js";
+import { getCard, getEffectiveWonderStages, getWonderSide, type CardColor, type GameState, type RoundAction } from "@sw/shared";
+import { canBuildCard, canBuildWonderStage, getPendingGreatWallMirror } from "./actionResolution.js";
 import { applyImmediateEffects, type PendingOpponentEffect } from "./effects.js";
 import { getNeighbors } from "./seating.js";
 import { isFreeViaChain } from "./chaining.js";
@@ -152,11 +152,18 @@ export function applyAction(state: GameState, playerId: string, action: RoundAct
   }
 
   if (action.type === "buildWonderStage") {
-    const check = canBuildWonderStage(state, playerId, action.cardId, action.stageIndex);
+    const check = canBuildWonderStage(state, playerId, action.cardId, action.stageIndex, action.mirrorStageIndex);
     if (!check.legal) throw new Error(`Cannot build wonder stage: ${check.reason}`);
     const wonderSide = getWonderSide(player.wonderId, player.wonderSide);
     const idx = wonderSide.anyOrder ? action.stageIndex! : player.wonderStagesBuilt;
-    const stage = wonderSide.stages[idx]!;
+
+    const mirrorNeighborSide = getPendingGreatWallMirror(state, playerId, wonderSide, idx);
+    const stage = mirrorNeighborSide ? mirrorNeighborSide.stages[action.mirrorStageIndex!]! : getEffectiveWonderStages(player, wonderSide)[idx]!;
+    // Manneken Pis mirroring a Great Wall neighbor: permanently record which of their 4
+    // stages was chosen, so every future read (scoring, production, display) sees it too.
+    if (mirrorNeighborSide && player.resolvedWonderStages) player.resolvedWonderStages[idx] = stage;
+    // Stonehenge: the stage is "marked" with the color of whichever card funds it.
+    if (stage.effects.some((e) => e.kind === "vpPerNeighborCardOfMarkedColor")) player.markedCardColor = getCard(action.cardId).color;
 
     removeFromHand(player.hand, action.cardId);
     if (check.payment) {

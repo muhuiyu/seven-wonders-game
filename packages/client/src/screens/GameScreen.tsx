@@ -6,7 +6,7 @@ import { Hand } from "../components/Hand";
 import { LeaderDraftPanel } from "../components/LeaderDraftPanel";
 import { LeaderRecruitPanel } from "../components/LeaderRecruitPanel";
 import { HoverTooltip } from "../components/HoverTooltip";
-import { CardEffectsView } from "../components/CardEffects";
+import { CardEffectsView, CoinCount, CoinIcon } from "../components/CardEffects";
 import { leaderById, summarizeMilitaryTokens } from "../lib/format";
 
 interface Props {
@@ -30,7 +30,7 @@ export function GameScreen({ state, onSubmit, submitting, error, banner }: Props
         <div className="age-round">{phaseLabel(state)}</div>
         <div className="stats">
           <span>
-            🪙 <b>{state.you.coins}</b>
+            <CoinCount amount={state.you.coins} />
           </span>
           <span>
             🏛️ Wonder stage <b>{state.you.wonderStagesBuilt}</b>
@@ -55,7 +55,9 @@ export function GameScreen({ state, onSubmit, submitting, error, banner }: Props
                     return (
                       <div key={view.cardId + i} className="leader-tile" style={{ cursor: "default" }}>
                         <div className="leader-name">{leader.name}</div>
-                        <div className="leader-cost">🪙{leader.coinCost}</div>
+                        <div className="leader-cost">
+                          <CoinIcon amount={leader.coinCost} />
+                        </div>
                         {leader.effects.length > 0 && (
                           <div className="leader-effect">
                             <CardEffectsView card={leader} />

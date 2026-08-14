@@ -36,6 +36,12 @@
   vertical-align: -3px;
   object-fit: contain;
 }
+.coin-count-icon {
+  width: 14px;
+  height: 14px;
+  vertical-align: -2px;
+  margin-right: 1px;
+}
 
 body {
   margin: 0;
@@ -86,7 +92,7 @@ button {
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 32px;
-  max-width: 560px;
+  max-width: 640px;
   width: 100%;
 }
 .setup-card h1 {
@@ -599,15 +605,23 @@ button {
   color: #fff;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 6px;
 }
 .built-card .card-name {
   font-weight: 700;
   font-size: 13px;
+  text-align: center;
 }
 .built-card .card-effect {
   font-size: 11px;
   line-height: 1.3;
+  text-align: center;
+}
+.built-card .card-effect .icon-symbol {
+  width: 24px;
+  height: 24px;
+  vertical-align: -4px;
 }
 
 .recruited-leaders {
@@ -623,16 +637,19 @@ button {
   color: #fff;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 6px;
   background: var(--c-leader);
 }
 .leader-card .card-name {
   font-weight: 700;
   font-size: 13px;
+  text-align: center;
 }
 .leader-card .card-effect {
   font-size: 11px;
   line-height: 1.3;
+  text-align: center;
 }
 
 .log-panel {
@@ -783,6 +800,7 @@ button {
   border: 2px solid transparent;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 6px;
   background: var(--c-leader);
   transition: transform 0.1s ease;
@@ -796,15 +814,23 @@ button {
 .leader-tile .leader-name {
   font-weight: 700;
   font-size: 13px;
+  text-align: center;
 }
 .leader-tile .leader-cost {
   font-size: 12px;
   opacity: 0.9;
+  text-align: center;
 }
 .leader-tile .leader-effect {
-  font-size: 11px;
-  opacity: 0.85;
+  font-size: 14px;
+  font-weight: 600;
   line-height: 1.3;
+  text-align: center;
+}
+.leader-tile .leader-effect .icon-symbol {
+  width: 28px;
+  height: 28px;
+  vertical-align: -4px;
 }
 
 .leader-recruit-card {

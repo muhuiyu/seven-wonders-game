@@ -1,5 +1,5 @@
 import type { CardEffect, GameState } from "@sw/shared";
-import { countByScope } from "./colorCounts.js";
+import { countByScope, countResourceProducerUnits } from "./colorCounts.js";
 import { bestScienceChoice, getScienceSymbolCounts } from "./science.js";
 import { grantBankToSelfAndNeighbors, resolveOpponentsPayOrDebt, resolveOpponentsPayPerOwnMetric } from "./cities.js";
 
@@ -67,6 +67,11 @@ export function applyImmediateEffects(state: GameState, playerId: string, effect
       case "coinsPerMilitaryToken": {
         const count = player.militaryTokens.filter((t) => t.result === effect.result).length;
         player.coins += count * effect.amount;
+        break;
+      }
+      case "coinsPerResourceProducer": {
+        const units = countResourceProducerUnits(player, effect.resource);
+        player.coins += units * effect.amount;
         break;
       }
       default:

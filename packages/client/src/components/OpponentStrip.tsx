@@ -1,7 +1,7 @@
-import type { CardColor, GameStateView } from "@sw/shared";
+import { getBuiltStageIndices, getEffectiveWonderStages, type CardColor, type GameStateView } from "@sw/shared";
 import { COLOR_VAR } from "../lib/colors";
 import { HoverTooltip } from "./HoverTooltip";
-import { CardEffectsView, ResourceIcon } from "./CardEffects";
+import { CardEffectsView, CoinCount, CostView, ResourceIcon } from "./CardEffects";
 import { cardById, countByColor, estimateShields, leaderById, summarizeMilitaryTokens, wonderSideOf } from "../lib/format";
 
 interface Props {
@@ -20,7 +20,7 @@ export function OpponentStrip({ state }: Props) {
         const p = state.players[id]!;
         const wonderSide = wonderSideOf(p.wonderId, p.wonderSide);
         const colors = countByColor(p.builtCardIds);
-        const shields = estimateShields(p.builtCardIds, p.wonderId, p.wonderSide, p.wonderStagesBuilt, p.builtWonderStageIndices);
+        const shields = estimateShields(p.builtCardIds, p.wonderId, p.wonderSide, p.wonderStagesBuilt, p.builtWonderStageIndices, p.resolvedWonderStages);
         const isLeftNeighbor = i === 0;
         const isRightNeighbor = i === opponentIds.length - 1;
         return (
@@ -34,9 +34,45 @@ export function OpponentStrip({ state }: Props) {
               <div>
                 {wonderSide.wonderName} ({p.wonderSide})
               </div>
-              <div>
-                stage {p.wonderStagesBuilt}/{wonderSide.stages.length}
-              </div>
+              <HoverTooltip
+                wide
+                content={(() => {
+                  const builtStages = new Set(getBuiltStageIndices(p, wonderSide));
+                  const stages = getEffectiveWonderStages(p, wonderSide);
+                  return wonderSide.stages.map((templateStage, i) => {
+                    const stage = stages[i]!;
+                    const built = builtStages.has(i);
+                    const pendingMirror = !built && templateStage.mirrors && stage.cost.length === 0;
+                    return (
+                      <div key={i} style={{ marginBottom: i < wonderSide.stages.length - 1 ? 6 : 0 }}>
+                        <div className="card-tooltip-name">
+                          {built ? "✓ " : ""}Stage {i + 1}
+                        </div>
+                        {pendingMirror ? (
+                          <div className="card-tooltip-effect" style={{ color: "var(--text-dim)" }}>
+                            Mirrors neighbor's wonder — revealed when built
+                          </div>
+                        ) : (
+                          <>
+                            <div className="card-tooltip-cost">
+                              <CostView cost={stage.cost} />
+                            </div>
+                            {stage.effects.length > 0 && (
+                              <div className="card-tooltip-effect">
+                                <CardEffectsView card={{ effects: stage.effects }} />
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    );
+                  });
+                })()}
+              >
+                <div>
+                  stage {p.wonderStagesBuilt}/{wonderSide.stages.length}
+                </div>
+              </HoverTooltip>
             </div>
             {(wonderSide.startingResource || (wonderSide.startingEffects && wonderSide.startingEffects.length > 0)) && (
               <HoverTooltip
@@ -54,7 +90,9 @@ export function OpponentStrip({ state }: Props) {
               </HoverTooltip>
             )}
             <div className="row">
-              <span>🪙 {p.coins}</span>
+              <span>
+                <CoinCount amount={p.coins} />
+              </span>
               <span>🛡️ {shields}</span>
               {p.recruitedLeaderIds.length > 0 ? (
                 <HoverTooltip

@@ -1,5 +1,6 @@
 import type { ResourceType, NeighborSide, ResourcePurchase } from "./resources.js";
-import type { ScienceSymbol, MilitaryResult } from "./cards.js";
+import type { ScienceSymbol, MilitaryResult, Cost, CardEffect, CardColor } from "./cards.js";
+import type { WonderStage } from "./wonders.js";
 
 export type Age = 1 | 2 | 3;
 
@@ -21,6 +22,8 @@ export interface PlayerState {
   wonderStagesBuilt: number;
   /** Indices of stages built so far (board order). Only ever populated for `anyOrder` wonders (currently The Great Wall) — empty for every other wonder. */
   builtWonderStageIndices: number[];
+  /** Per-player override of the wonder's static stages, resolved once at setup. Only populated for wonders with `mirrors`-marked stages (currently Manneken Pis); `undefined` for every other wonder. */
+  resolvedWonderStages?: WonderStage[];
   builtCardIds: string[];
   discardedCardIds: string[]; // cards this player discarded for coins (own history, for guild/UI purposes)
   coins: number;
@@ -35,15 +38,17 @@ export interface PlayerState {
   /** Cities expansion. */
   debtVp: number; // cumulative unpayable-debt penalty, always <= 0
   diplomacyTokens: number; // pending tokens; each skips this player's next military conflict resolution entirely
+  /** Stonehenge Side B stage 2: the color of whichever card was spent to build that stage, captured at build time. Unset if built via a Leader (no card color available) or if the player's wonder never grants this effect. */
+  markedCardColor?: CardColor;
 }
 
 export type RoundAction =
   | { type: "build"; cardId: string; payment?: PaymentPlan }
-  | { type: "buildWonderStage"; cardId: string; payment?: PaymentPlan; discardPickId?: string; stageIndex?: number }
+  | { type: "buildWonderStage"; cardId: string; payment?: PaymentPlan; discardPickId?: string; stageIndex?: number; mirrorStageIndex?: number }
   | { type: "discard"; cardId: string }
   | { type: "draftLeader"; cardId: string }
   | { type: "recruitLeader"; cardId: string; discardPickId?: string }
-  | { type: "buildWonderStageFromLeader"; cardId: string; discardPickId?: string; stageIndex?: number }
+  | { type: "buildWonderStageFromLeader"; cardId: string; discardPickId?: string; stageIndex?: number; mirrorStageIndex?: number }
   | { type: "discardLeaderForCoins"; cardId: string };
 
 export interface PaymentPlan {
@@ -111,8 +116,16 @@ export interface HandCardView {
   wonderStageAffordable: boolean;
   wonderStageFree: boolean;
   wonderStagePurchases: ResourcePurchase[];
-  /** For `anyOrder` wonders only: every unbuilt stage's index/affordability/purchases, so the client can offer a stage-choice picker. Absent for ordinary sequential wonders. */
-  wonderStageOptions?: { stageIndex: number; affordable: boolean; purchases: ResourcePurchase[] }[];
+  /**
+   * Present whenever building the next wonder stage requires the player to pick among
+   * several options, so the client can offer a stage-choice picker — either "which of my
+   * own unbuilt stages" (`ownStage`, `anyOrder` wonders like Great Wall) or "which of my
+   * neighbor's Great Wall stages to mirror" (`mirrorStage`, Manneken Pis). Cost/effects are
+   * inlined per-option since for `mirrorStage` they belong to the neighbor's wonder, which
+   * the client has no other clean way to look up. Absent when no choice is needed.
+   */
+  wonderStageOptions?: { stageIndex: number; cost: Cost; effects: CardEffect[]; affordable: boolean; purchases: ResourcePurchase[] }[];
+  wonderStageChoiceKind?: "ownStage" | "mirrorStage";
   alreadyBuilt: boolean; // can't build a duplicate civilian/etc. card
 }
 
@@ -121,8 +134,9 @@ export interface LeaderHandCardView {
   recruitAffordable: boolean;
   recruitFree: boolean;
   wonderStageAffordable: boolean; // via buildWonderStageFromLeader
-  /** For `anyOrder` wonders only: see HandCardView.wonderStageOptions. */
-  wonderStageOptions?: { stageIndex: number; affordable: boolean }[];
+  /** See HandCardView.wonderStageOptions/wonderStageChoiceKind. */
+  wonderStageOptions?: { stageIndex: number; cost: Cost; effects: CardEffect[]; affordable: boolean; purchases: ResourcePurchase[] }[];
+  wonderStageChoiceKind?: "ownStage" | "mirrorStage";
 }
 
 /** Client-facing view: adds derived affordability info for the human's hand without leaking bot hands. */

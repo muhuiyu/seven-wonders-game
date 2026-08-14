@@ -1,5 +1,5 @@
-import { getUnbuiltStageIndices, getWonderSide, type GameState, type RoundAction } from "@sw/shared";
-import { canBuildCard, canBuildWonderStage, getAffordability, getEffectiveCost } from "../engine/actionResolution.js";
+import { getEffectiveWonderStages, getUnbuiltStageIndices, getWonderSide, type Cost, type GameState, type RoundAction } from "@sw/shared";
+import { canBuildCard, canBuildWonderStage, getAffordability, getEffectiveCost, getPendingGreatWallMirror } from "../engine/actionResolution.js";
 
 export function enumerateCandidateActions(state: GameState, playerId: string): RoundAction[] {
   const player = state.players[playerId]!;
@@ -12,8 +12,17 @@ export function enumerateCandidateActions(state: GameState, playerId: string): R
       for (const stageIndex of getUnbuiltStageIndices(player, wonderSide)) {
         if (canBuildWonderStage(state, playerId, cardId, stageIndex).legal) candidates.push({ type: "buildWonderStage", cardId, stageIndex });
       }
-    } else if (canBuildWonderStage(state, playerId, cardId).legal) {
-      candidates.push({ type: "buildWonderStage", cardId });
+    } else {
+      const mirrorNeighborSide = getPendingGreatWallMirror(state, playerId, wonderSide, player.wonderStagesBuilt);
+      if (mirrorNeighborSide) {
+        mirrorNeighborSide.stages.forEach((_, mirrorStageIndex) => {
+          if (canBuildWonderStage(state, playerId, cardId, undefined, mirrorStageIndex).legal) {
+            candidates.push({ type: "buildWonderStage", cardId, mirrorStageIndex });
+          }
+        });
+      } else if (canBuildWonderStage(state, playerId, cardId).legal) {
+        candidates.push({ type: "buildWonderStage", cardId });
+      }
     }
     candidates.push({ type: "discard", cardId });
   }
@@ -31,20 +40,33 @@ export function enumerateLeaderRecruitCandidates(state: GameState, playerId: str
   const player = state.players[playerId]!;
   const candidates: RoundAction[] = [];
   const wonderSide = getWonderSide(player.wonderId, player.wonderSide);
+  const affordable = (cost: Cost) => getAffordability(state, playerId, getEffectiveCost(player, cost, "wonderStage")).affordable;
 
-  const fundableStageIndices = wonderSide.anyOrder
-    ? getUnbuiltStageIndices(player, wonderSide).filter((idx) => getAffordability(state, playerId, getEffectiveCost(player, wonderSide.stages[idx]!.cost, "wonderStage")).affordable)
-    : (() => {
-        const nextStage = wonderSide.stages[player.wonderStagesBuilt];
-        const canFundStage = !!nextStage && getAffordability(state, playerId, getEffectiveCost(player, nextStage.cost, "wonderStage")).affordable;
-        return canFundStage ? [player.wonderStagesBuilt] : [];
-      })();
+  let fundableStages: { stageIndex?: number; mirrorStageIndex?: number }[];
+  if (wonderSide.anyOrder) {
+    const stages = getEffectiveWonderStages(player, wonderSide);
+    fundableStages = getUnbuiltStageIndices(player, wonderSide)
+      .filter((idx) => affordable(stages[idx]!.cost))
+      .map((stageIndex) => ({ stageIndex }));
+  } else {
+    const mirrorNeighborSide = getPendingGreatWallMirror(state, playerId, wonderSide, player.wonderStagesBuilt);
+    if (mirrorNeighborSide) {
+      fundableStages = mirrorNeighborSide.stages
+        .map((stage, mirrorStageIndex) => ({ mirrorStageIndex, affordable: affordable(stage.cost) }))
+        .filter((o) => o.affordable)
+        .map(({ mirrorStageIndex }) => ({ mirrorStageIndex }));
+    } else {
+      const nextStage = getEffectiveWonderStages(player, wonderSide)[player.wonderStagesBuilt];
+      const canFundStage = !!nextStage && nextStage.cost.length > 0 && affordable(nextStage.cost);
+      fundableStages = canFundStage ? [{}] : [];
+    }
+  }
 
   for (const cardId of player.leaderHand) {
     candidates.push({ type: "recruitLeader", cardId });
     candidates.push({ type: "discardLeaderForCoins", cardId });
-    for (const stageIndex of fundableStageIndices) {
-      candidates.push({ type: "buildWonderStageFromLeader", cardId, stageIndex: wonderSide.anyOrder ? stageIndex : undefined });
+    for (const fund of fundableStages) {
+      candidates.push({ type: "buildWonderStageFromLeader", cardId, stageIndex: fund.stageIndex, mirrorStageIndex: fund.mirrorStageIndex });
     }
   }
 
