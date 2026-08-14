@@ -15,7 +15,7 @@ const WONDER_STRATEGY_AFFINITY: Record<string, BotStrategyId> = {
 };
 
 // Even a wonder with a strong affinity sometimes produces a bot that ignores it — keeps games unpredictable.
-const RANDOM_STRATEGY_CHANCE = 0.15;
+const RANDOM_STRATEGY_CHANCE = 0.2;
 
 export function assignBotStrategy(wonderId: string, rng: () => number): BotStrategyId {
   if (rng() < RANDOM_STRATEGY_CHANCE) {
