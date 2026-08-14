@@ -24,7 +24,7 @@ export const AGE_III_CARDS: Card[] = [
 
   // --- Yellow: commerce ---
   { id: "chamber-of-commerce", name: "Chamber of Commerce", age: 3, color: "yellow", cost: [{ resources: { clay: 2, papyrus: 1 } }], effects: [{ kind: "vpAndCoinsPerCard", color: "grey", scope: "self", vpPer: 1, coinsPer: 2 }] },
-  { id: "arena", name: "Arena", age: 3, color: "yellow", cost: [{ resources: { clay: 2, ore: 1 } }], effects: [{ kind: "vpPerWonderStage", scope: "self", perStage: 1 }, { kind: "coins", amount: 3 }] },
-  { id: "lighthouse", name: "Lighthouse", age: 3, color: "yellow", cost: [{ resources: { stone: 1, glass: 1 } }], effects: [{ kind: "vpAndCoinsPerCard", color: "yellow", scope: "self", vpPer: 1, coinsPer: 1 }] },
-  { id: "haven", name: "Haven", age: 3, color: "yellow", cost: [{ resources: { loom: 1, ore: 1, wood: 1 } }], effects: [{ kind: "vpAndCoinsPerCard", color: "brown", scope: "self", vpPer: 1, coinsPer: 1 }] },
+  { id: "arena", name: "Arena", age: 3, color: "yellow", cost: [{ resources: { clay: 2, ore: 1 } }], chainFrom: ["stables"], effects: [{ kind: "vpPerWonderStage", scope: "self", perStage: 1 }, { kind: "coins", amount: 3 }] },
+  { id: "lighthouse", name: "Lighthouse", age: 3, color: "yellow", cost: [{ resources: { stone: 1, glass: 1 } }], chainFrom: ["caravansery"], effects: [{ kind: "vpAndCoinsPerCard", color: "yellow", scope: "self", vpPer: 1, coinsPer: 1 }] },
+  { id: "haven", name: "Haven", age: 3, color: "yellow", cost: [{ resources: { loom: 1, ore: 1, wood: 1 } }], chainFrom: ["forum"], effects: [{ kind: "vpAndCoinsPerCard", color: "brown", scope: "self", vpPer: 1, coinsPer: 1 }] },
 ];
