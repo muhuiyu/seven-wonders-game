@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 interface Props {
@@ -35,8 +35,22 @@ export function HoverTooltip({ content, children, wide }: Props) {
     });
   }
 
+  // onMouseOver/onMouseOut rather than onMouseEnter/onMouseLeave: React synthesizes enter/leave
+  // by walking the DOM ancestor chain of the native event's relatedTarget, and that walk breaks
+  // silently whenever relatedTarget is a node that's since been removed from the document —
+  // e.g. the button just unmounted by a screen transition, or a hand card that got replaced by
+  // a different card at the same index after a round. When that happens onMouseEnter never
+  // fires even though the pointer is genuinely over the trigger, so the tooltip randomly never
+  // shows. onMouseOver/onMouseOut are raw bubbling events keyed off the actual hit-tested
+  // target, not off relatedTarget ancestry, so they aren't subject to that failure.
+  function handleMouseOut(e: ReactMouseEvent) {
+    const related = e.relatedTarget as Node | null;
+    if (related && triggerRef.current?.contains(related)) return; // moved within the trigger's own children
+    setPos(null);
+  }
+
   return (
-    <span ref={triggerRef} className="hover-tooltip-trigger" onMouseEnter={show} onMouseLeave={() => setPos(null)}>
+    <span ref={triggerRef} className="hover-tooltip-trigger" onMouseOver={show} onMouseOut={handleMouseOut}>
       {children}
       {pos &&
         createPortal(
