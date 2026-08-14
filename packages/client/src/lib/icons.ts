@@ -11,6 +11,7 @@ import cog from "../assets/icons/cog.png";
 import compass from "../assets/icons/compass.png";
 import tablet from "../assets/icons/tablet.png";
 import shield from "../assets/icons/shield.png";
+import diplomacyToken from "../assets/icons/diplomacy-token.png";
 
 /** Real card-art icons sourced from the 7 Wonders wiki (static.wikia.nocookie.net), used in
  *  place of emoji for resources, science symbols, and military shields. Coins and victory
@@ -32,3 +33,5 @@ export const SCIENCE_IMG: Record<ScienceSymbol, string> = {
 };
 
 export const SHIELD_IMG = shield;
+
+export const DIPLOMACY_TOKEN_IMG = diplomacyToken;

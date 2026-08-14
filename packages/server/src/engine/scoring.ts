@@ -1,4 +1,4 @@
-import { getCard, getWonderSide, type CardColor, type CardEffect, type GameState, type PlayerState, type ScoreBreakdown } from "@sw/shared";
+import { getBuiltStageIndices, getCard, getWonderSide, type CardColor, type CardEffect, type GameState, type PlayerState, type ScoreBreakdown } from "@sw/shared";
 import { countByScope, countCardsOfColor, countDefeatTokensByScope, countMilitaryTokensByScope, countRecruitedLeadersByScope, countWonderStagesByScope } from "./colorCounts.js";
 import { militaryVp } from "./military.js";
 import { getEffectiveScienceCounts, scoreScience } from "./science.js";
@@ -57,7 +57,7 @@ export function leaderVp(state: GameState, playerId: string): number {
 export function wonderVp(player: PlayerState): number {
   const wonderSide = getWonderSide(player.wonderId, player.wonderSide);
   let total = 0;
-  for (let i = 0; i < player.wonderStagesBuilt; i++) {
+  for (const i of getBuiltStageIndices(player, wonderSide)) {
     const stage = wonderSide.stages[i];
     if (!stage) continue;
     for (const effect of stage.effects) {

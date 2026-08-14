@@ -93,7 +93,8 @@ function effectsForAction(state: GameState, playerId: string, action: RoundActio
   if (action.type === "buildWonderStage") {
     const player = state.players[playerId]!;
     const wonderSide = getWonderSide(player.wonderId, player.wonderSide);
-    return wonderSide.stages[player.wonderStagesBuilt]?.effects ?? [];
+    const idx = wonderSide.anyOrder ? action.stageIndex! : player.wonderStagesBuilt;
+    return wonderSide.stages[idx]?.effects ?? [];
   }
   return [];
 }
@@ -101,7 +102,8 @@ function effectsForAction(state: GameState, playerId: string, action: RoundActio
 const TYPE_PRIORITY: Partial<Record<RoundAction["type"], number>> = { buildWonderStage: 0, build: 1, discard: 2 };
 
 function sortKey(action: RoundAction): string {
-  return `${TYPE_PRIORITY[action.type] ?? 9}-${action.cardId}`;
+  const stageIndex = action.type === "buildWonderStage" || action.type === "buildWonderStageFromLeader" ? (action.stageIndex ?? "") : "";
+  return `${TYPE_PRIORITY[action.type] ?? 9}-${action.cardId}-${stageIndex}`;
 }
 
 function scoreCandidate(state: GameState, playerId: string, action: RoundAction): number {

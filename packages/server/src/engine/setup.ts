@@ -100,6 +100,7 @@ export function createGame(opts: SetupOptions): GameState {
       wonderId: wonder.id,
       wonderSide: wonder.side,
       wonderStagesBuilt: 0,
+      builtWonderStageIndices: [],
       builtCardIds: [],
       discardedCardIds: [],
       coins: startingCoins,

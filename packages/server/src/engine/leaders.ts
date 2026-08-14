@@ -1,4 +1,4 @@
-import { getLeaderCard, getWonderSide, type GameState, type RoundAction } from "@sw/shared";
+import { getLeaderCard, getUnbuiltStageIndices, getWonderSide, type GameState, type RoundAction } from "@sw/shared";
 import { getAffordability, getEffectiveCost } from "./actionResolution.js";
 import { applyImmediateEffects } from "./effects.js";
 import { payAndCredit, resolveDiscardPileBuild } from "./applyAction.js";
@@ -53,7 +53,17 @@ export function applyLeaderAction(state: GameState, playerId: string, action: Ro
   if (action.type === "buildWonderStageFromLeader") {
     if (!player.leaderHand.includes(action.cardId)) throw new Error(`Leader ${action.cardId} not in hand`);
     const wonderSide = getWonderSide(player.wonderId, player.wonderSide);
-    const stage = wonderSide.stages[player.wonderStagesBuilt];
+
+    let idx: number;
+    if (wonderSide.anyOrder) {
+      const unbuilt = getUnbuiltStageIndices(player, wonderSide);
+      if (unbuilt.length === 0) throw new Error("All wonder stages already built");
+      if (action.stageIndex === undefined || !unbuilt.includes(action.stageIndex)) throw new Error("Choose a valid wonder stage");
+      idx = action.stageIndex;
+    } else {
+      idx = player.wonderStagesBuilt;
+    }
+    const stage = wonderSide.stages[idx];
     if (!stage) throw new Error("All wonder stages already built");
     const effectiveCost = getEffectiveCost(player, stage.cost, "wonderStage");
     const payment = getAffordability(state, playerId, effectiveCost);
@@ -62,11 +72,12 @@ export function applyLeaderAction(state: GameState, playerId: string, action: Ro
     removeFrom(player.leaderHand, action.cardId, "Leader");
     payAndCredit(state, playerId, payment.totalCoinCost, payment.purchases);
     player.wonderStagesBuilt += 1;
+    if (wonderSide.anyOrder) player.builtWonderStageIndices.push(idx);
     const extraTurn = applyImmediateEffects(state, playerId, stage.effects);
     state.log.push({
       round: state.round,
       age: state.age,
-      message: `${player.name} funds a wonder stage (${wonderSide.wonderName}, stage ${player.wonderStagesBuilt}) using ${getLeaderCard(action.cardId).name}.`,
+      message: `${player.name} funds a wonder stage (${wonderSide.wonderName}, stage ${idx + 1}) using ${getLeaderCard(action.cardId).name}.`,
     });
     if (stage.effects.some((e) => e.kind === "buildFromDiscardPile")) {
       resolveDiscardPileBuild(state, playerId, action.discardPickId, wonderSide.wonderName);

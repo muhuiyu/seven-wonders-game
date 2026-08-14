@@ -1,4 +1,4 @@
-import { ALL_RESOURCES, getCard, getLeaderCard, getWonderSide, type PlayerState, type ResourceType } from "@sw/shared";
+import { ALL_RESOURCES, getBuiltStageIndices, getCard, getLeaderCard, getWonderSide, type PlayerState, type ResourceType } from "@sw/shared";
 
 export interface ProductionSlot {
   id: string;
@@ -23,7 +23,8 @@ export function getProductionSlots(player: PlayerState): ProductionSlot[] {
   if (wonderSide.startingResource) {
     slots.push({ id: "wonder:starting", domain: [wonderSide.startingResource], qty: 1 });
   }
-  for (let i = 0; i < player.wonderStagesBuilt; i++) {
+  const builtStageIndices = getBuiltStageIndices(player, wonderSide);
+  for (const i of builtStageIndices) {
     const stage = wonderSide.stages[i];
     if (!stage) continue;
     for (const effect of stage.effects) {
@@ -52,6 +53,15 @@ export function getProductionSlots(player: PlayerState): ProductionSlot[] {
       if (effect.kind !== "dynamicResource") continue;
       const domain = effect.mode === "matchOwn" ? [...ownProduced] : ALL_RESOURCES.filter((r) => !ownProduced.has(r));
       if (domain.length > 0) slots.push({ id: `card:${cardId}:dynamic`, domain, qty: 1 });
+    }
+  }
+  for (const i of builtStageIndices) {
+    const stage = wonderSide.stages[i];
+    if (!stage) continue;
+    for (const effect of stage.effects) {
+      if (effect.kind !== "dynamicResource") continue;
+      const domain = effect.mode === "matchOwn" ? [...ownProduced] : ALL_RESOURCES.filter((r) => !ownProduced.has(r));
+      if (domain.length > 0) slots.push({ id: `wonder:${i}:dynamic`, domain, qty: 1 });
     }
   }
 

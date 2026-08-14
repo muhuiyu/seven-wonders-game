@@ -148,11 +148,26 @@ export const WONDER_SIDES: WonderSide[] = [
     { cost: [{ resources: { wood: 1, ore: 1, papyrus: 1 } }], effects: [{ kind: "diplomacyToken" }, { kind: "vp", amount: 4 }] },
     { cost: [{ resources: { ore: 2, glass: 1, loom: 1 } }], effects: [{ kind: "diplomacyToken" }, { kind: "vp", amount: 6 }] },
   ]), requiresExpansion: "cities" },
+
+  // --- The Great Wall (Cities expansion) — starting resource: loom. Its 4 stages may be
+  // built in any order (anyOrder: true) instead of the usual strict left-to-right order. ---
+  { ...side("greatwall", "The Great Wall", "A", "loom", [
+    { cost: [{ resources: { wood: 2 } }], effects: [{ kind: "coins", amount: 8 }] },
+    { cost: [{ resources: { papyrus: 1, glass: 1, clay: 1 } }], effects: [{ kind: "scienceChoice" }] },
+    { cost: [{ resources: { stone: 3 } }], effects: [{ kind: "shields", count: 2 }] },
+    { cost: [{ resources: { ore: 3 } }], effects: [{ kind: "buildFromDiscardPile" }] },
+  ]), requiresExpansion: "cities", anyOrder: true },
+  { ...side("greatwall", "The Great Wall", "B", "loom", [
+    { cost: [{ resources: { papyrus: 1, wood: 1 } }], effects: [{ kind: "bankGrantSelfAndNeighbors", self: 8, neighbors: 2 }] },
+    { cost: [{ resources: { wood: 1, clay: 2 } }], effects: [{ kind: "copyNeighborScienceSymbol" }] },
+    { cost: [{ resources: { papyrus: 1, wood: 2 } }], effects: [{ kind: "diplomacyToken" }, { kind: "opponentsPayOrDebt", amount: 2 }] },
+    { cost: [{ resources: { stone: 2 } }], effects: [{ kind: "dynamicResource", mode: "fillGap" }] },
+  ]), requiresExpansion: "cities", anyOrder: true },
 ];
 
 export const WONDER_IDS = ["gizah", "rhodos", "ephesos", "babylon", "olympia", "halikarnassos", "alexandria"] as const;
 
-export const EXPANSION_WONDER_IDS = ["roma", "petra", "byzantium"] as const;
+export const EXPANSION_WONDER_IDS = ["roma", "petra", "byzantium", "greatwall"] as const;
 
 export function getWonderSide(wonderId: string, side: "A" | "B"): WonderSide {
   const found = WONDER_SIDES.find((w) => w.wonderId === wonderId && w.side === side);
@@ -168,4 +183,22 @@ export function getAvailableWonderIds(expansions: { leaders: boolean; cities: bo
     if (anySide?.requiresExpansion && expansions[anySide.requiresExpansion]) ids.push(id);
   }
   return ids;
+}
+
+/**
+ * Indices of stages this player has completed, in board order. For ordinary sequential
+ * wonders this is always `[0, 1, ..., wonderStagesBuilt - 1]`, derived from the count —
+ * matching every wonder's actual build history since they can only be built in order. For
+ * `anyOrder` wonders (currently only The Great Wall) it's the player's own tracked set,
+ * since the count alone can't tell you which specific stages those were.
+ */
+export function getBuiltStageIndices(player: { wonderStagesBuilt: number; builtWonderStageIndices: number[] }, wonderSide: WonderSide): number[] {
+  if (wonderSide.anyOrder) return player.builtWonderStageIndices;
+  return Array.from({ length: player.wonderStagesBuilt }, (_, i) => i);
+}
+
+/** Indices of stages not yet built, in board order. */
+export function getUnbuiltStageIndices(player: { wonderStagesBuilt: number; builtWonderStageIndices: number[] }, wonderSide: WonderSide): number[] {
+  const built = new Set(getBuiltStageIndices(player, wonderSide));
+  return wonderSide.stages.map((_, i) => i).filter((i) => !built.has(i));
 }

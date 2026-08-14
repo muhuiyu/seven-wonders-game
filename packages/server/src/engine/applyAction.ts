@@ -152,10 +152,11 @@ export function applyAction(state: GameState, playerId: string, action: RoundAct
   }
 
   if (action.type === "buildWonderStage") {
-    const check = canBuildWonderStage(state, playerId, action.cardId);
+    const check = canBuildWonderStage(state, playerId, action.cardId, action.stageIndex);
     if (!check.legal) throw new Error(`Cannot build wonder stage: ${check.reason}`);
     const wonderSide = getWonderSide(player.wonderId, player.wonderSide);
-    const stage = wonderSide.stages[player.wonderStagesBuilt]!;
+    const idx = wonderSide.anyOrder ? action.stageIndex! : player.wonderStagesBuilt;
+    const stage = wonderSide.stages[idx]!;
 
     removeFromHand(player.hand, action.cardId);
     if (check.payment) {
@@ -164,9 +165,10 @@ export function applyAction(state: GameState, playerId: string, action: RoundAct
     }
 
     player.wonderStagesBuilt += 1;
+    if (wonderSide.anyOrder) player.builtWonderStageIndices.push(idx);
     state.discardPile.push(action.cardId);
     const extraTurn = applyImmediateEffects(state, playerId, stage.effects, deferredOpponentEffects);
-    state.log.push({ round: state.round, age: state.age, message: `${player.name} builds a wonder stage (${wonderSide.wonderName}, stage ${player.wonderStagesBuilt}).` });
+    state.log.push({ round: state.round, age: state.age, message: `${player.name} builds a wonder stage (${wonderSide.wonderName}, stage ${idx + 1}).` });
     if (stage.effects.some((e) => e.kind === "buildFromDiscardPile")) {
       resolveDiscardPileBuild(state, playerId, action.discardPickId, wonderSide.wonderName);
     }

@@ -20,7 +20,7 @@ export function OpponentStrip({ state }: Props) {
         const p = state.players[id]!;
         const wonderSide = wonderSideOf(p.wonderId, p.wonderSide);
         const colors = countByColor(p.builtCardIds);
-        const shields = estimateShields(p.builtCardIds, p.wonderId, p.wonderSide, p.wonderStagesBuilt);
+        const shields = estimateShields(p.builtCardIds, p.wonderId, p.wonderSide, p.wonderStagesBuilt, p.builtWonderStageIndices);
         const isLeftNeighbor = i === 0;
         const isRightNeighbor = i === opponentIds.length - 1;
         return (

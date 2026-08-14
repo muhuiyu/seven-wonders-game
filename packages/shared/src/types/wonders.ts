@@ -16,4 +16,6 @@ export interface WonderSide {
   startingEffects?: CardEffect[];
   stages: WonderStage[];
   requiresExpansion?: ExpansionId;
+  /** When true, stages may be built in any order (currently only The Great Wall) instead of the usual strict left-to-right order. */
+  anyOrder?: boolean;
 }

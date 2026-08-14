@@ -1,6 +1,8 @@
-import { CARD_COLORS, type GameStateView } from "@sw/shared";
+import { CARD_COLORS, getBuiltStageIndices, type GameStateView } from "@sw/shared";
 import { COLOR_VAR } from "../lib/colors";
 import { CardEffectsView, CostView, ResourceIcon } from "./CardEffects";
+import { CardTooltip } from "./CardTooltip";
+import { HoverTooltip } from "./HoverTooltip";
 import { cardById, leaderById, wonderSideOf } from "../lib/format";
 
 interface Props {
@@ -27,15 +29,20 @@ export function SelfPanel({ you }: Props) {
           </div>
         )}
         <div className="wonder-stages">
-          {wonderSide.stages.map((stage, i) => (
-            <div key={i} className={`wonder-stage-chip${i < you.wonderStagesBuilt ? " built" : ""}`}>
-              {i < you.wonderStagesBuilt ? "✓ " : ""}
-              <CostView cost={stage.cost} />
-              <div style={{ marginTop: 4 }}>
-                <CardEffectsView card={{ effects: stage.effects }} />
+          {(() => {
+            const builtStages = new Set(getBuiltStageIndices(you, wonderSide));
+            return wonderSide.stages.map((stage, i) => (
+              <div key={i} className={`wonder-stage-chip${builtStages.has(i) ? " built" : ""}`}>
+                <span className="wonder-stage-cost">
+                  {builtStages.has(i) ? "✓ " : ""}
+                  <CostView cost={stage.cost} />
+                </span>
+                <div className="wonder-stage-effect">
+                  <CardEffectsView card={{ effects: stage.effects }} />
+                </div>
               </div>
-            </div>
-          ))}
+            ));
+          })()}
         </div>
       </div>
 
@@ -53,14 +60,15 @@ export function SelfPanel({ you }: Props) {
                 {ids.map((id, i) => {
                   const card = cardById(id);
                   return (
-                    <div key={id + i} className="built-card" style={{ background: COLOR_VAR[card.color] }}>
-                      <div className="card-name">{card.name}</div>
-                      {card.effects.length > 0 && (
-                        <div className="card-effect">
-                          <CardEffectsView card={card} />
-                        </div>
-                      )}
-                    </div>
+                    <CardTooltip key={id + i} card={card}>
+                      <div className="built-card" style={{ background: COLOR_VAR[card.color] }}>
+                        {card.effects.length > 0 && (
+                          <div className="card-effect">
+                            <CardEffectsView card={card} compact />
+                          </div>
+                        )}
+                      </div>
+                    </CardTooltip>
                   );
                 })}
               </div>
@@ -78,14 +86,28 @@ export function SelfPanel({ you }: Props) {
             {you.recruitedLeaderIds.map((id, i) => {
               const leader = leaderById(id);
               return (
-                <div key={id + i} className="leader-card">
-                  <div className="card-name">{leader.name}</div>
-                  {leader.effects.length > 0 && (
-                    <div className="card-effect">
-                      <CardEffectsView card={leader} />
-                    </div>
-                  )}
-                </div>
+                <HoverTooltip
+                  key={id + i}
+                  content={
+                    <>
+                      <span className="card-tooltip-name">{leader.name}</span>
+                      <span className="card-tooltip-cost">🪙{leader.coinCost}</span>
+                      {leader.effects.length > 0 && (
+                        <span className="card-tooltip-effect">
+                          <CardEffectsView card={leader} />
+                        </span>
+                      )}
+                    </>
+                  }
+                >
+                  <div className="leader-card">
+                    {leader.effects.length > 0 && (
+                      <div className="card-effect">
+                        <CardEffectsView card={leader} compact />
+                      </div>
+                    )}
+                  </div>
+                </HoverTooltip>
               );
             })}
           </div>

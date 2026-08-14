@@ -1,4 +1,4 @@
-import { getCard, getWonderSide, type Cost, type CardColor, type GameState, type PlayerState } from "@sw/shared";
+import { getCard, getUnbuiltStageIndices, getWonderSide, type Cost, type CardColor, type GameState, type PlayerState } from "@sw/shared";
 import { isFreeViaChain } from "./chaining.js";
 import { getNeighbors } from "./seating.js";
 import { getProductionSlots } from "./productionSlots.js";
@@ -96,11 +96,21 @@ export interface WonderStageCheck {
   payment?: AffordabilityResult;
 }
 
-export function canBuildWonderStage(state: GameState, playerId: string, cardId: string): WonderStageCheck {
+export function canBuildWonderStage(state: GameState, playerId: string, cardId: string, stageIndex?: number): WonderStageCheck {
   const player = state.players[playerId]!;
   if (!player.hand.includes(cardId)) return { legal: false, reason: "not in hand" };
   const wonderSide = getWonderSide(player.wonderId, player.wonderSide);
-  const stage = wonderSide.stages[player.wonderStagesBuilt];
+
+  let idx: number;
+  if (wonderSide.anyOrder) {
+    const unbuilt = getUnbuiltStageIndices(player, wonderSide);
+    if (unbuilt.length === 0) return { legal: false, reason: "all wonder stages built" };
+    if (stageIndex === undefined || !unbuilt.includes(stageIndex)) return { legal: false, reason: "choose a valid wonder stage" };
+    idx = stageIndex;
+  } else {
+    idx = player.wonderStagesBuilt;
+  }
+  const stage = wonderSide.stages[idx];
   if (!stage) return { legal: false, reason: "all wonder stages built" };
 
   const effectiveCost = getEffectiveCost(player, stage.cost, "wonderStage");

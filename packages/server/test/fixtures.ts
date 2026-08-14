@@ -8,6 +8,7 @@ export function makePlayer(id: string, overrides: Partial<PlayerState> = {}): Pl
     wonderId: "gizah",
     wonderSide: "A",
     wonderStagesBuilt: 0,
+    builtWonderStageIndices: [],
     builtCardIds: [],
     discardedCardIds: [],
     coins: 3,

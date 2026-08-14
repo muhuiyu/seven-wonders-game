@@ -19,6 +19,8 @@ export interface PlayerState {
   wonderId: string;
   wonderSide: "A" | "B";
   wonderStagesBuilt: number;
+  /** Indices of stages built so far (board order). Only ever populated for `anyOrder` wonders (currently The Great Wall) — empty for every other wonder. */
+  builtWonderStageIndices: number[];
   builtCardIds: string[];
   discardedCardIds: string[]; // cards this player discarded for coins (own history, for guild/UI purposes)
   coins: number;
@@ -37,11 +39,11 @@ export interface PlayerState {
 
 export type RoundAction =
   | { type: "build"; cardId: string; payment?: PaymentPlan }
-  | { type: "buildWonderStage"; cardId: string; payment?: PaymentPlan; discardPickId?: string }
+  | { type: "buildWonderStage"; cardId: string; payment?: PaymentPlan; discardPickId?: string; stageIndex?: number }
   | { type: "discard"; cardId: string }
   | { type: "draftLeader"; cardId: string }
   | { type: "recruitLeader"; cardId: string; discardPickId?: string }
-  | { type: "buildWonderStageFromLeader"; cardId: string; discardPickId?: string }
+  | { type: "buildWonderStageFromLeader"; cardId: string; discardPickId?: string; stageIndex?: number }
   | { type: "discardLeaderForCoins"; cardId: string };
 
 export interface PaymentPlan {
@@ -109,6 +111,8 @@ export interface HandCardView {
   wonderStageAffordable: boolean;
   wonderStageFree: boolean;
   wonderStagePurchases: ResourcePurchase[];
+  /** For `anyOrder` wonders only: every unbuilt stage's index/affordability/purchases, so the client can offer a stage-choice picker. Absent for ordinary sequential wonders. */
+  wonderStageOptions?: { stageIndex: number; affordable: boolean; purchases: ResourcePurchase[] }[];
   alreadyBuilt: boolean; // can't build a duplicate civilian/etc. card
 }
 
@@ -117,6 +121,8 @@ export interface LeaderHandCardView {
   recruitAffordable: boolean;
   recruitFree: boolean;
   wonderStageAffordable: boolean; // via buildWonderStageFromLeader
+  /** For `anyOrder` wonders only: see HandCardView.wonderStageOptions. */
+  wonderStageOptions?: { stageIndex: number; affordable: boolean }[];
 }
 
 /** Client-facing view: adds derived affordability info for the human's hand without leaking bot hands. */
