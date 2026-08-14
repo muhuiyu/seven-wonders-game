@@ -49,6 +49,8 @@ import coinLoss9 from "../assets/icons/coin-loss-9.png"
 import coinLoss10 from "../assets/icons/coin-loss-10.png"
 import copyNeighborScience from "../assets/icons/copy-neighbor-science.png"
 import buildFromDiscard from "../assets/icons/build-from-discard.png"
+import tradingPostLeft from "../assets/icons/trading-post-left.png"
+import tradingPostRight from "../assets/icons/trading-post-right.png"
 
 /** Real card-art icons sourced from the 7 Wonders wiki (static.wikia.nocookie.net), used in
  *  place of emoji for resources, science symbols, and military shields. Coins and victory

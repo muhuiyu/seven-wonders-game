@@ -60,7 +60,13 @@ function VictoryPointIcon({ points }: { points: number }) {
  *  costs/payments, where the icon art has no "+" baked in either. */
 export function CoinIcon({ amount, gain }: { amount: number; gain?: boolean }) {
   const icon = coinIcon(amount)
-  if (!icon) return <>{gain ? "+" : ""}{amount} 🪙</>
+  if (!icon)
+    return (
+      <>
+        {gain ? "+" : ""}
+        {amount} 🪙
+      </>
+    )
   return <img className="icon-symbol" src={icon} alt={`${amount} coins`} title={`${amount} coins`} />
 }
 
@@ -76,7 +82,8 @@ export function CoinLossIcon({ amount }: { amount: number }) {
 export function CoinCount({ amount }: { amount: number }) {
   return (
     <>
-      <img className="icon-symbol coin-count-icon" src={COIN_BLANK_IMG} alt="coins" title={`${amount} coins`} /> {amount}
+      <img className="icon-symbol coin-count-icon" src={COIN_BLANK_IMG} alt="coins" title={`${amount} coins`} />{" "}
+      {amount}
     </>
   )
 }
@@ -197,7 +204,8 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
     case "coinsPerCard":
       return (
         <>
-          <CoinIcon amount={effect.perCard} gain /> per <ColorTag color={effect.color} /> card in {SCOPE_LABEL[effect.scope]}
+          <CoinIcon amount={effect.perCard} gain /> per <ColorTag color={effect.color} /> card in{" "}
+          {SCOPE_LABEL[effect.scope]}
         </>
       )
     case "vpAndCoinsPerCard":
@@ -382,7 +390,10 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
     case "vpPerScienceSet":
       return (
         <>
-          <VictoryPointIcon points={effect.perSet} /> per complete science symbol set
+          <VictoryPointIcon points={effect.perSet} /> per
+          <ScienceIcon symbol={"compass"} />
+          <ScienceIcon symbol={"tablet"} />
+          <ScienceIcon symbol={"cog"} />
         </>
       )
     case "copyNeighborLeader":
@@ -396,13 +407,15 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
     case "vpPerResourceProducer":
       return (
         <>
-          <VictoryPointIcon points={effect.perProducer} /> per <ResourceIcon type={effect.resource} /> produced in your city
+          <VictoryPointIcon points={effect.perProducer} /> per <ResourceIcon type={effect.resource} /> produced in your
+          city
         </>
       )
     case "vpPerNeighborCardOfMarkedColor":
       return (
         <>
-          <VictoryPointIcon points={effect.perCard} /> per neighbor's card matching the color of the card used to build this
+          <VictoryPointIcon points={effect.perCard} /> per neighbor's card matching the color of the card used to build
+          this
         </>
       )
     default:

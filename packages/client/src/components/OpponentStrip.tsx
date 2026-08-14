@@ -1,5 +1,6 @@
 import { getBuiltStageIndices, getEffectiveWonderStages, type CardColor, type GameStateView } from "@sw/shared";
 import { COLOR_VAR } from "../lib/colors";
+import { CardTooltip } from "./CardTooltip";
 import { HoverTooltip } from "./HoverTooltip";
 import { CardEffectsView, CoinCount, CostView, ResourceIcon } from "./CardEffects";
 import { cardById, countByColor, estimateShields, leaderById, summarizeMilitaryTokens, wonderSideOf } from "../lib/format";
@@ -74,6 +75,18 @@ export function OpponentStrip({ state }: Props) {
                 </div>
               </HoverTooltip>
             </div>
+            {(() => {
+              const lastBuiltId = p.builtCardIds[p.builtCardIds.length - 1];
+              if (!lastBuiltId) return null;
+              const lastBuilt = cardById(lastBuiltId);
+              return (
+                <CardTooltip card={lastBuilt}>
+                  <div className="opponent-action-bar" style={{ background: COLOR_VAR[lastBuilt.color] }}>
+                    {lastBuilt.name}
+                  </div>
+                </CardTooltip>
+              );
+            })()}
             {(wonderSide.startingResource || (wonderSide.startingEffects && wonderSide.startingEffects.length > 0)) && (
               <HoverTooltip
                 content={

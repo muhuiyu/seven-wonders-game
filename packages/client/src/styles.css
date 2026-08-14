@@ -18,8 +18,8 @@
   --c-red: #a5423b;
   --c-green: #4c8c4a;
   --c-purple: #7b4397;
-  --c-black: #4a4a52;
-  --c-leader: #8a6d1f;
+  --c-black: #353538;
+  --c-leader: #6f6d67;
 
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
@@ -347,6 +347,18 @@ button {
   font-size: 11px;
   color: var(--text-dim);
   margin-bottom: 6px;
+}
+.opponent-action-bar {
+  border-radius: 6px;
+  padding: 4px 7px;
+  margin-bottom: 6px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: default;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .opponent-card .wonder-starting-bonus {
   font-size: 11px;
@@ -699,16 +711,19 @@ button {
 }
 
 .card-tile {
+  position: relative;
   min-width: 150px;
   max-width: 150px;
+  height: 190px;
   border-radius: 10px;
-  padding: 10px;
+  padding: 0;
   color: #fff;
   cursor: pointer;
   border: 2px solid transparent;
+  background: var(--panel-alt);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  overflow: hidden;
   transition: transform 0.1s ease;
 }
 .card-tile:hover {
@@ -723,30 +738,65 @@ button {
 .card-tile.unaffordable:not(.already-built-tile) {
   opacity: 0.7;
 }
-.card-tile .card-name {
-  font-weight: 700;
-  font-size: 13px;
+.card-tile .card-top {
+  position: relative;
+  flex: none;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 8px;
 }
 .card-tile .card-cost {
-  font-size: 12px;
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  font-size: 11px;
   opacity: 0.9;
 }
+.card-tile .card-effect-section {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .card-tile .card-effect {
-  font-size: 14px;
-  line-height: 1.3;
-  font-weight: 600;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.2;
+  font-weight: 700;
 }
 .card-tile .card-effect .icon-symbol {
-  width: 28px;
-  height: 28px;
-  vertical-align: -4px;
+  width: 30px;
+  height: 30px;
+}
+.card-tile .card-art {
+  flex: 1;
+  background: linear-gradient(160deg, #232838, #191d27);
+}
+.card-tile .card-footer {
+  flex: none;
+  padding: 6px 8px;
+  background: rgba(0, 0, 0, 0.55);
+  text-align: center;
+}
+.card-tile .card-name {
+  font-weight: 700;
+  font-size: 12.5px;
+  color: var(--text);
 }
 .card-tile .already-built {
+  position: absolute;
+  top: 6px;
+  right: 6px;
   font-size: 10px;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.6);
   border-radius: 4px;
   padding: 2px 5px;
-  align-self: flex-start;
 }
 
 .action-panel {
