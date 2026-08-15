@@ -1,5 +1,6 @@
 import { getBuiltStageIndices, getEffectiveWonderStages, type CardColor, type GameStateView } from "@sw/shared";
 import { COLOR_VAR } from "../lib/colors";
+import { CardTooltip } from "./CardTooltip";
 import { HoverTooltip } from "./HoverTooltip";
 import { CardEffectsView, CoinCount, CostView, ResourceIcon } from "./CardEffects";
 import { cardById, countByColor, estimateShields, leaderById, summarizeMilitaryTokens, wonderSideOf } from "../lib/format";
@@ -74,19 +75,21 @@ export function OpponentStrip({ state }: Props) {
                 </div>
               </HoverTooltip>
             </div>
-            {(wonderSide.startingResource || (wonderSide.startingEffects && wonderSide.startingEffects.length > 0)) && (
-              <HoverTooltip
-                content={
-                  wonderSide.startingEffects && wonderSide.startingEffects.length > 0 ? (
-                    <CardEffectsView card={{ effects: wonderSide.startingEffects }} />
-                  ) : (
-                    "Starting resource"
-                  )
-                }
-              >
-                <div className="wonder-starting-bonus">
-                  {wonderSide.startingResource ? <ResourceIcon type={wonderSide.startingResource} /> : "🏛️ starting bonus"}
-                </div>
+            {(() => {
+              const lastBuiltId = p.builtCardIds[p.builtCardIds.length - 1];
+              if (!lastBuiltId) return null;
+              const lastBuilt = cardById(lastBuiltId);
+              return (
+                <CardTooltip card={lastBuilt}>
+                  <div className="opponent-action-bar" style={{ background: COLOR_VAR[lastBuilt.color] }}>
+                    {lastBuilt.name}
+                  </div>
+                </CardTooltip>
+              );
+            })()}
+            {wonderSide.startingEffects && wonderSide.startingEffects.length > 0 && (
+              <HoverTooltip content={<CardEffectsView card={{ effects: wonderSide.startingEffects }} />}>
+                <div className="wonder-starting-bonus">🏛️ starting bonus</div>
               </HoverTooltip>
             )}
             <div className="row">
@@ -131,6 +134,13 @@ export function OpponentStrip({ state }: Props) {
               </div>
             )}
             <div className="colors">
+              {wonderSide.startingResource && (
+                <HoverTooltip content="Starting resource">
+                  <span className="color-pip resource-pip">
+                    <ResourceIcon type={wonderSide.startingResource} />
+                  </span>
+                </HoverTooltip>
+              )}
               {Object.entries(colors).map(([color, count]) => {
                 const colorCards = p.builtCardIds.filter((cardId) => cardById(cardId).color === (color as CardColor)).map(cardById);
                 return (
