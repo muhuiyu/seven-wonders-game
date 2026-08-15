@@ -87,19 +87,9 @@ export function OpponentStrip({ state }: Props) {
                 </CardTooltip>
               );
             })()}
-            {(wonderSide.startingResource || (wonderSide.startingEffects && wonderSide.startingEffects.length > 0)) && (
-              <HoverTooltip
-                content={
-                  wonderSide.startingEffects && wonderSide.startingEffects.length > 0 ? (
-                    <CardEffectsView card={{ effects: wonderSide.startingEffects }} />
-                  ) : (
-                    "Starting resource"
-                  )
-                }
-              >
-                <div className="wonder-starting-bonus">
-                  {wonderSide.startingResource ? <ResourceIcon type={wonderSide.startingResource} /> : "🏛️ starting bonus"}
-                </div>
+            {wonderSide.startingEffects && wonderSide.startingEffects.length > 0 && (
+              <HoverTooltip content={<CardEffectsView card={{ effects: wonderSide.startingEffects }} />}>
+                <div className="wonder-starting-bonus">🏛️ starting bonus</div>
               </HoverTooltip>
             )}
             <div className="row">
@@ -144,6 +134,13 @@ export function OpponentStrip({ state }: Props) {
               </div>
             )}
             <div className="colors">
+              {wonderSide.startingResource && (
+                <HoverTooltip content="Starting resource">
+                  <span className="color-pip resource-pip">
+                    <ResourceIcon type={wonderSide.startingResource} />
+                  </span>
+                </HoverTooltip>
+              )}
               {Object.entries(colors).map(([color, count]) => {
                 const colorCards = p.builtCardIds.filter((cardId) => cardById(cardId).color === (color as CardColor)).map(cardById);
                 return (

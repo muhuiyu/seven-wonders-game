@@ -4,6 +4,7 @@ import type {
   CardColor,
   CardEffect,
   Cost,
+  NeighborSide,
   PlayerScope,
   ResourcePurchase,
   ResourceType,
@@ -17,10 +18,18 @@ import {
   coinLossIcon,
   COPY_NEIGHBOR_SCIENCE_ICON,
   DIPLOMACY_TOKEN_IMG,
+  MARKETPLACE_ICON,
   RESOURCE_IMG,
   SCIENCE_IMG,
   SHIELD_IMG,
+  TRADING_POST_EAST_ICON,
+  TRADING_POST_WEST_ICON,
   victoryPointIcon,
+  CARD_COLOR_ICON,
+  BLACK_MARKET_ICON,
+  COINS_PER_MILITARY_TOKEN_ICON,
+  REFUND_FROM_LEFT_ICON,
+  REFUND_FROM_RIGHT_ICON,
 } from "../lib/icons"
 
 export function ResourceIcon({ type }: { type: ResourceType }) {
@@ -46,6 +55,21 @@ function BuildFromDiscardIcon() {
       src={BUILD_FROM_DISCARD_ICON}
       alt="build a free card from the discard pile"
       title="Build a free card of your choice from the discard pile"
+    />
+  )
+}
+
+function TradeDiscountIcon({ sides }: { sides: NeighborSide[] }) {
+  if (sides.length === 2) {
+    return <img height={32} src={MARKETPLACE_ICON} alt="marketplace" title="both neighbors" />
+  }
+  const isEast = sides[0] === "right"
+  return (
+    <img
+      height={32}
+      src={isEast ? TRADING_POST_EAST_ICON : TRADING_POST_WEST_ICON}
+      alt={isEast ? "east trading post" : "west trading post"}
+      title={isEast ? "east neighbor" : "west neighbor"}
     />
   )
 }
@@ -94,6 +118,17 @@ export function ColorTag({ color }: { color: CardColor }) {
   return <span className={`color-tag color-tag--${color}`}>{COLOR_LABEL[color]}</span>
 }
 
+function ColorCardIcon({ color }: { color: CardColor }) {
+  return (
+    <img
+      className="icon-symbol"
+      src={CARD_COLOR_ICON[color]}
+      alt={`${COLOR_LABEL[color]} card`}
+      title={`${COLOR_LABEL[color]} card`}
+    />
+  )
+}
+
 const SCOPE_LABEL: Record<PlayerScope, string> = {
   self: "your city",
   leftNeighbor: "your left neighbor's city",
@@ -118,15 +153,16 @@ export function CostView({ cost }: { cost: Cost }) {
       for (const [res, qty] of Object.entries(option.resources)) {
         bits.push(
           <span key={res} className="cost-bit">
-            <ResourceIcon type={res as ResourceType} />
-            {qty && qty > 1 ? qty : ""}
+            {Array.from({ length: qty }, (_, i) => (
+              <ResourceIcon key={i} type={res as ResourceType} />
+            ))}
           </span>,
         )
       }
     }
     return (
       <span key={i} className="cost-option">
-        {bits.length === 0 ? "Free" : bits}
+        {bits.length === 0 ? "" : bits}
       </span>
     )
   })
@@ -163,8 +199,11 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
       return (
         <>
           {compact ? "" : "Produce "}
-          {effect.production.qty > 1 ? `${effect.production.qty}x ` : ""}
-          {joinSlash(effect.production.options.map((r) => <ResourceIcon key={r} type={r} />))}
+          {Array.from({ length: effect.production.qty }, (_, i) => (
+            <span key={i} className="resource-unit">
+              {joinSlash(effect.production.options.map((r) => <ResourceIcon key={r} type={r} />))}
+            </span>
+          ))}
         </>
       )
     case "shields":
@@ -197,14 +236,14 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
     case "vpPerCard":
       return (
         <>
-          <VictoryPointIcon points={effect.perCard} /> per <ColorTag color={effect.color} /> card in{" "}
+          <VictoryPointIcon points={effect.perCard} /> per <ColorCardIcon color={effect.color} /> in{" "}
           {SCOPE_LABEL[effect.scope]}
         </>
       )
     case "coinsPerCard":
       return (
         <>
-          <CoinIcon amount={effect.perCard} gain /> per <ColorTag color={effect.color} /> card in{" "}
+          <CoinIcon amount={effect.perCard} gain /> per <ColorCardIcon color={effect.color} /> in{" "}
           {SCOPE_LABEL[effect.scope]}
         </>
       )
@@ -212,7 +251,7 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
       return (
         <>
           <CoinIcon amount={effect.coinsPer} gain /> now, <VictoryPointIcon points={effect.vpPer} /> per{" "}
-          <ColorTag color={effect.color} /> card in {SCOPE_LABEL[effect.scope]}
+          <ColorCardIcon color={effect.color} /> in {SCOPE_LABEL[effect.scope]}
         </>
       )
     case "vpPerWonderStage":
@@ -231,23 +270,19 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
       return (
         <>
           <VictoryPointIcon points={effect.perCard} /> per{" "}
-          {joinSlash(effect.colors.map((c) => <ColorTag key={c} color={c} />))} card in your city
+          {joinSlash(effect.colors.map((c) => <ColorCardIcon key={c} color={c} />))} in your city
         </>
       )
     case "tradeDiscount":
       return (
         <>
-          Trade{" "}
-          {effect.resources.map((r) => (
-            <ResourceIcon key={r} type={r} />
-          ))}{" "}
-          from {effect.sides.join("/")} neighbor for {effect.unitCost} 🪙
+          <TradeDiscountIcon sides={effect.sides} />
         </>
       )
     case "copyGuild":
       return (
         <>
-          Copy a neighboring <ColorTag color="purple" /> card
+          Copy a neighboring <ColorCardIcon color="purple" />
         </>
       )
     case "freeBuildFirstOfEachColor":
@@ -265,16 +300,11 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
     case "diplomacyToken":
       return <DiplomacyTokenIcon />
     case "opponentsPayOrDebt":
-      return (
-        <>
-          Every other player pays <CoinLossIcon amount={effect.amount} /> or takes Debt
-        </>
-      )
+      return <CoinLossIcon amount={effect.amount} />
     case "opponentsPayPerOwnMetric":
       return (
         <>
-          Every other player pays {effect.perUnit} 🪙 per{" "}
-          {effect.metric === "wonderStagesBuilt" ? "Wonder stage" : "military victory"} they have
+          {effect.perUnit} 🪙 per {effect.metric === "wonderStagesBuilt" ? "Wonder stage" : "military victory"}
         </>
       )
     case "bankGrantSelfAndNeighbors":
@@ -292,19 +322,16 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
     case "dynamicResource":
       return (
         <>
-          {effect.mode === "matchOwn"
-            ? "Produce 1 extra unit of a resource you already produce"
-            : "Produce 1 unit of a resource you don't already produce"}
+          {effect.mode === "matchOwn" ? (
+            "Produce 1 extra unit of a resource you already produce"
+          ) : (
+            <img height={40} src={BLACK_MARKET_ICON} className="icon-symbol" alt="black market" title="black market" />
+          )}
         </>
       )
     case "copyNeighborScienceSymbol":
       return (
-        <img
-          className="icon-symbol"
-          src={COPY_NEIGHBOR_SCIENCE_ICON}
-          alt="copy neighbor science"
-          title="copy neighbor science"
-        />
+        <img height={32} src={COPY_NEIGHBOR_SCIENCE_ICON} alt="copy neighbor science" title="copy neighbor science" />
       )
     case "vpPerMilitaryToken":
       return (
@@ -316,13 +343,18 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
     case "coinsPerMilitaryToken":
       return (
         <>
-          <CoinIcon amount={effect.amount} gain /> per military {effect.result} token
+          <img
+            height={32}
+            src={COINS_PER_MILITARY_TOKEN_ICON}
+            alt="coins per military token"
+            title="coins per military token"
+          />{" "}
         </>
       )
     case "buildDiscount":
       return (
         <>
-          Build {effect.appliesTo === "wonderStage" ? "Wonder stages" : <ColorTag color={effect.appliesTo} />} for{" "}
+          Build {effect.appliesTo === "wonderStage" ? "Wonder stages" : <ColorCardIcon color={effect.appliesTo} />} for{" "}
           {effect.units} fewer resource{effect.units > 1 ? "s" : ""}
         </>
       )
@@ -331,12 +363,27 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
     case "bankPurchase":
       return <>Once per turn, buy 1 resource from the bank for {effect.unitCost} 🪙</>
     case "neighborPurchaseRebate":
-      return <>Refund {effect.amount} 🪙 per neighbor you trade with this turn</>
+      return (
+        <>
+          <img
+            height={32}
+            src={REFUND_FROM_LEFT_ICON}
+            alt="refund when trading with left neighbor"
+            title={`Refund ${effect.amount} 🪙 the first time you trade with your left neighbor this turn`}
+          />
+          <img
+            height={32}
+            src={REFUND_FROM_RIGHT_ICON}
+            alt="refund when trading with right neighbor"
+            title={`Refund ${effect.amount} 🪙 the first time you trade with your right neighbor this turn`}
+          />
+        </>
+      )
     case "vpPerColorSetBonus":
       return (
         <>
           <VictoryPointIcon points={effect.perSet} /> per complete set of{" "}
-          {joinSlash(effect.colors.map((c) => <ColorTag key={c} color={c} />))} in your city
+          {joinSlash(effect.colors.map((c) => <ColorCardIcon key={c} color={c} />))} in your city
         </>
       )
     case "freeLeaderRecruitment":
@@ -356,7 +403,7 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
     case "freeBuildForColor":
       return (
         <>
-          Build <ColorTag color={effect.color} /> ignoring their resource cost
+          Build <ColorCardIcon color={effect.color} /> ignoring their resource cost
         </>
       )
     case "recycleDiscardOnRecruit":
@@ -372,7 +419,7 @@ export function EffectView({ effect, compact }: { effect: CardEffect; compact?: 
     case "coinsOnColorBuild":
       return (
         <>
-          <CoinIcon amount={effect.amount} gain /> whenever you build a <ColorTag color={effect.color} /> card
+          <CoinIcon amount={effect.amount} gain /> whenever you build a <ColorCardIcon color={effect.color} />
         </>
       )
     case "vpPerCoinsHeld":
@@ -428,7 +475,6 @@ export function CardEffectsView({ card, compact }: { card: Pick<Card, "effects">
     <>
       {card.effects.map((effect, i) => (
         <span key={i} className="effect-line">
-          {i > 0 && <span className="effect-sep"> · </span>}
           <EffectView effect={effect} compact={compact} />
         </span>
       ))}

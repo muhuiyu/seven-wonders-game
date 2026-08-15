@@ -42,6 +42,9 @@
   vertical-align: -2px;
   margin-right: 1px;
 }
+.resource-unit + .resource-unit {
+  margin-left: 3px;
+}
 
 body {
   margin: 0;
@@ -759,6 +762,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding-top: 8px;
 }
 .card-tile .card-effect {
   flex: 1;
@@ -773,6 +777,7 @@ button {
 .card-tile .card-effect .icon-symbol {
   width: 30px;
   height: 30px;
+  vertical-align: middle;
 }
 .card-tile .card-art {
   flex: 1;
@@ -811,6 +816,8 @@ button {
   flex-wrap: wrap;
 }
 .action-panel .action-btn {
+  display: inline-flex;
+  align-items: center;
   padding: 9px 16px;
   border-radius: 8px;
   border: 1px solid var(--border);
